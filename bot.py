@@ -18,7 +18,7 @@ OWNER_USERNAME = "BeStChEaT_OwNeR"
 
 user_states = {}
 
-class PremiumSpamBot:
+class PremiumGroupSpamBot:
     def __init__(self):
         self.owner_id = OWNER_ID
         self.owner_username = OWNER_USERNAME
@@ -31,16 +31,16 @@ class PremiumSpamBot:
     
     def block_msg(self):
         return f"""
-{self.bi('🔥 EXCLUSIVE PREMIUM BOT 🔥')}
+{self.bi('EXCLUSIVE PREMIUM BOT')}
 
-{self.bi('🔐 ACCESS DENIED 🔐')}
+{self.bi('ACCESS DENIED')}
 
-{self.bi('♛ This bot is strictly private')}
-{self.bi('and operates for owner only!')}
+{self.bi('This bot is strictly private')}
+{self.bi('and operates for owner only')}
 
-{self.bi('⭐ Owner: @' + self.owner_username)}
+{self.bi('Owner: @' + self.owner_username)}
 
-{self.bi('❌ Unauthorized access blocked!')}
+{self.bi('Unauthorized access blocked')}
 """
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -51,34 +51,31 @@ class PremiumSpamBot:
             return
         
         keyboard = [
-            [InlineKeyboardButton("🔥 START SPAMMING 🔥", callback_data="start_spam")],
-            [InlineKeyboardButton("⭐ STATS ⭐", callback_data="my_stats"),
-             InlineKeyboardButton("ℹ️ HELP ℹ️", callback_data="help_menu")],
-            [InlineKeyboardButton("👥 GROUP SPAM 👥", callback_data="target_group"),
-             InlineKeyboardButton("💬 PRIVATE SPAM 💬", callback_data="target_private")],
-            [InlineKeyboardButton("🔐 OWNER PANEL 🔐", callback_data="owner_panel")],
-            [InlineKeyboardButton("♛ OWNER CHANNEL ♛", url=f"https://t.me/{self.owner_username}")]
+            [InlineKeyboardButton("START SPAMMING", callback_data="start_spam")],
+            [InlineKeyboardButton("STATS", callback_data="my_stats"),
+             InlineKeyboardButton("HELP", callback_data="help_menu")],
+            [InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
+            [InlineKeyboardButton("OWNER CHANNEL", url=f"https://t.me/{self.owner_username}")]
         ]
         
         welcome = f"""
-{self.bi('🔥🔥 EXCLUSIVE PREMIUM SPAM BOT 🔥🔥')}
+{self.bi('EXCLUSIVE PREMIUM SPAM BOT')}
 
-{self.bi('♛ WELCOME BACK MASTER! ♛')}
+{self.bi('WELCOME BACK MASTER')}
 
-{self.bi('⭐ PREMIUM FEATURES ⭐')}
-{self.bi('• Ultra Fast Spamming')}
-{self.bi('• Multi-Media Support')}
-{self.bi('• Anti-Ban Protection')}
-{self.bi('• Group & Private Mode')}
-{self.bi('• Custom Speed Control')}
-{self.bi('• Unlimited Messages')}
-{self.bi('• 24/7 Running')}
+{self.bi('PREMIUM FEATURES')}
+{self.bi('Ultra Fast Group Spamming')}
+{self.bi('Multi-Media Support')}
+{self.bi('Anti-Ban Protection')}
+{self.bi('Custom Speed Control')}
+{self.bi('Unlimited Messages')}
+{self.bi('24/7 Running')}
 
-{self.bi('🔐 STATUS: Private Mode')}
-{self.bi('👑 ACCESS: Owner Only')}
-{self.bi('🔥 PLAN: Exclusive Premium')}
+{self.bi('STATUS: Private Mode')}
+{self.bi('ACCESS: Owner Only')}
+{self.bi('PLAN: Exclusive Premium')}
 
-{self.bi('SELECT AN OPTION BELOW 👇')}
+{self.bi('SELECT AN OPTION BELOW')}
 """
         await update.message.reply_text(welcome, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     
@@ -94,46 +91,38 @@ class PremiumSpamBot:
         data = query.data
         
         if data == "start_spam":
-            keyboard = [
-                [InlineKeyboardButton("👥 GROUP 👥", callback_data="target_group"),
-                 InlineKeyboardButton("💬 PRIVATE 💬", callback_data="target_private")],
-                [InlineKeyboardButton("🔙 MAIN MENU 🔙", callback_data="main_menu")]
-            ]
+            user_states[user_id] = {"step": "waiting_for_username"}
             await query.edit_message_text(
-                f"{self.bi('♛ CHOOSE TARGET TYPE ♛')}\n\n{self.bi('Select where to send messages 👇')}",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
-            )
-        
-        elif data in ["target_group", "target_private"]:
-            target_type = "group" if data == "target_group" else "private"
-            user_states[user_id] = {"step": "waiting_for_username", "target_type": target_type}
-            
-            msg = f"""
-{self.bi('📎 SEND GROUP LINK OR USERNAME')}
+                f"""
+{self.bi('SEND GROUP USERNAME OR LINK')}
 
 {self.bi('Examples:')}
-{self.bi('• https://t.me/username')}
-{self.bi('• @username')}
-{self.bi('• username')}
+{self.bi('@groupusername')}
+{self.bi('https://t.me/groupusername')}
+{self.bi('groupusername')}
 
-{self.bi('⭐ Send now to continue ⭐')}
-"""
-            await query.edit_message_text(msg, parse_mode=ParseMode.MARKDOWN)
+{self.bi('IMPORTANT:')}
+{self.bi('Bot must be added to group as ADMIN')}
+{self.bi('Group must be PUBLIC')}
+
+{self.bi('Send group username now')}
+""",
+                parse_mode=ParseMode.MARKDOWN
+            )
         
         elif data == "my_stats":
             await query.edit_message_text(
                 f"""
-{self.bi('🔥 OWNER STATISTICS 🔥')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('♛ Status: Active & Online')}
-{self.bi('👑 Plan: Exclusive Owner')}
-{self.bi('🔐 Access: Private Mode')}
-{self.bi('🔥 Limits: Unlimited')}
-{self.bi('⚡ Speed: Ultra Max')}
-{self.bi('⏰ Uptime: 24/7')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('♛ NO ONE ELSE CAN USE THIS BOT!')}
+{self.bi('OWNER STATISTICS')}
+{self.bi('--------------------')}
+{self.bi('Status: Active and Online')}
+{self.bi('Plan: Exclusive Owner')}
+{self.bi('Access: Private Mode')}
+{self.bi('Limits: Unlimited')}
+{self.bi('Speed: Ultra Max')}
+{self.bi('Uptime: 24/7')}
+{self.bi('--------------------')}
+{self.bi('NO ONE ELSE CAN USE THIS BOT')}
 """,
                 parse_mode=ParseMode.MARKDOWN
             )
@@ -141,15 +130,31 @@ class PremiumSpamBot:
         elif data == "help_menu":
             await query.edit_message_text(
                 f"""
-{self.bi('📚 HOW TO USE 📚')}
-{self.bi('━━━━━━━━━━')}
-{self.bi('1️⃣ Click Start Spamming')}
-{self.bi('2️⃣ Choose Group or Private')}
-{self.bi('3️⃣ Send Username/Link')}
-{self.bi('4️⃣ Select Content Type')}
-{self.bi('5️⃣ Set Count & Speed')}
-{self.bi('6️⃣ Watch Magic! ✨')}
-{self.bi('👑 Owner Exclusive Access')}
+{self.bi('HOW TO USE')}
+{self.bi('--------------------')}
+
+{self.bi('STEP 1:')}
+{self.bi('Add bot to your group as ADMIN')}
+
+{self.bi('STEP 2:')}
+{self.bi('Make sure group is PUBLIC')}
+
+{self.bi('STEP 3:')}
+{self.bi('Click START SPAMMING')}
+
+{self.bi('STEP 4:')}
+{self.bi('Send group @username')}
+
+{self.bi('STEP 5:')}
+{self.bi('Select message type')}
+
+{self.bi('STEP 6:')}
+{self.bi('Send content, count and speed')}
+
+{self.bi('STEP 7:')}
+{self.bi('Bot will spam in group')}
+
+{self.bi('Owner Exclusive Access')}
 """,
                 parse_mode=ParseMode.MARKDOWN
             )
@@ -157,14 +162,14 @@ class PremiumSpamBot:
         elif data == "owner_panel":
             await query.edit_message_text(
                 f"""
-{self.bi('🔐 OWNER PANEL 🔐')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('♛ Owner ID: ' + str(self.owner_id))}
-{self.bi('👑 Username: @' + self.owner_username)}
-{self.bi('🔐 Access: Exclusive')}
-{self.bi('🔥 Protection: Maximum')}
-{self.bi('⚡ Speed: Unlimited')}
-{self.bi('Bot is 100% Secure!')}
+{self.bi('OWNER PANEL')}
+{self.bi('--------------------')}
+{self.bi('Owner ID: ' + str(self.owner_id))}
+{self.bi('Username: @' + self.owner_username)}
+{self.bi('Access: Exclusive')}
+{self.bi('Protection: Maximum')}
+{self.bi('Speed: Unlimited')}
+{self.bi('Bot is 100 Percent Secure')}
 """,
                 parse_mode=ParseMode.MARKDOWN
             )
@@ -180,17 +185,24 @@ class PremiumSpamBot:
             user_states[user_id]["step"] = "waiting_for_content"
             
             msgs = {
-                "text": f"{self.bi('💬 SEND YOUR TEXT MESSAGE 💬')}",
-                "photo": f"{self.bi('🖼 SEND YOUR PHOTO 🖼')}",
-                "video": f"{self.bi('🎥 SEND YOUR VIDEO 🎥')}",
-                "document": f"{self.bi('📄 SEND YOUR DOCUMENT 📄')}",
-                "audio": f"{self.bi('🎵 SEND YOUR AUDIO 🎵')}",
-                "sticker": f"{self.bi('🏷 SEND YOUR STICKER 🏷')}"
+                "text": f"{self.bi('SEND YOUR TEXT MESSAGE')}",
+                "photo": f"{self.bi('SEND YOUR PHOTO')}",
+                "video": f"{self.bi('SEND YOUR VIDEO')}",
+                "document": f"{self.bi('SEND YOUR DOCUMENT')}",
+                "audio": f"{self.bi('SEND YOUR AUDIO')}",
+                "sticker": f"{self.bi('SEND YOUR STICKER')}",
+                "voice": f"{self.bi('SEND YOUR VOICE MESSAGE')}",
+                "video_note": f"{self.bi('SEND YOUR VIDEO NOTE')}"
             }
             await query.edit_message_text(msgs.get(msg_type, self.bi('SEND YOUR CONTENT')), parse_mode=ParseMode.MARKDOWN)
         
         elif data.startswith("speed_"):
-            speed_map = {"speed_ultra": 0.5, "speed_fast": 1, "speed_normal": 2, "speed_slow": 5}
+            speed_map = {
+                "speed_ultra": 0.3,
+                "speed_fast": 0.7,
+                "speed_normal": 1.5,
+                "speed_slow": 4
+            }
             user_states[user_id]["delay"] = speed_map.get(data, 1)
             await self.execute_spam(query, user_id, context)
     
@@ -216,23 +228,25 @@ class PremiumSpamBot:
                 user_states[user_id]["step"] = "waiting_for_type"
                 
                 keyboard = [
-                    [InlineKeyboardButton("💬 TEXT 💬", callback_data="type_text"),
-                     InlineKeyboardButton("🖼 PHOTO 🖼", callback_data="type_photo")],
-                    [InlineKeyboardButton("🎥 VIDEO 🎥", callback_data="type_video"),
-                     InlineKeyboardButton("📄 DOCUMENT 📄", callback_data="type_document")],
-                    [InlineKeyboardButton("🎵 AUDIO 🎵", callback_data="type_audio"),
-                     InlineKeyboardButton("🏷 STICKER 🏷", callback_data="type_sticker")],
-                    [InlineKeyboardButton("🔙 CANCEL 🔙", callback_data="main_menu")]
+                    [InlineKeyboardButton("TEXT", callback_data="type_text"),
+                     InlineKeyboardButton("PHOTO", callback_data="type_photo")],
+                    [InlineKeyboardButton("VIDEO", callback_data="type_video"),
+                     InlineKeyboardButton("DOCUMENT", callback_data="type_document")],
+                    [InlineKeyboardButton("AUDIO", callback_data="type_audio"),
+                     InlineKeyboardButton("STICKER", callback_data="type_sticker")],
+                    [InlineKeyboardButton("VOICE", callback_data="type_voice"),
+                     InlineKeyboardButton("VIDEO NOTE", callback_data="type_video_note")],
+                    [InlineKeyboardButton("CANCEL", callback_data="main_menu")]
                 ]
                 
                 await update.message.reply_text(
                     f"""
-{self.bi('✅ TARGET SET SUCCESSFULLY ✅')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('⭐ Target: @' + username)}
-{self.bi('👥 Type: ' + state.get('target_type', 'N/A'))}
+{self.bi('TARGET SET SUCCESSFULLY')}
+{self.bi('--------------------')}
+{self.bi('Target: @' + username)}
+{self.bi('Type: Group')}
 
-{self.bi('NOW SELECT CONTENT TYPE 👇')}
+{self.bi('NOW SELECT CONTENT TYPE')}
 """,
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
@@ -240,12 +254,12 @@ class PremiumSpamBot:
             else:
                 await update.message.reply_text(
                     f"""
-{self.bi('❌ INVALID USERNAME! ❌')}
+{self.bi('INVALID USERNAME')}
 
 {self.bi('Please send a valid format:')}
-{self.bi('• https://t.me/username')}
-{self.bi('• @username')}
-{self.bi('• username')}
+{self.bi('@username')}
+{self.bi('https://t.me/username')}
+{self.bi('username')}
 """,
                     parse_mode=ParseMode.MARKDOWN
                 )
@@ -256,10 +270,10 @@ class PremiumSpamBot:
             
             await update.message.reply_text(
                 f"""
-{self.bi('🔢 HOW MANY TIMES? 🔢')}
+{self.bi('HOW MANY TIMES')}
 
-{self.bi('Send a number (1-1000)')}
-{self.bi('⭐ Recommended: 10 for testing')}
+{self.bi('Send a number from 1 to 1000')}
+{self.bi('Recommended: 10 for testing')}
 """,
                 parse_mode=ParseMode.MARKDOWN
             )
@@ -273,19 +287,19 @@ class PremiumSpamBot:
                 user_states[user_id]["step"] = "waiting_for_speed"
                 
                 keyboard = [
-                    [InlineKeyboardButton("⚡ ULTRA ⚡ (0.5s)", callback_data="speed_ultra"),
-                     InlineKeyboardButton("🚀 FAST 🚀 (1s)", callback_data="speed_fast")],
-                    [InlineKeyboardButton("🐢 NORMAL 🐢 (2s)", callback_data="speed_normal"),
-                     InlineKeyboardButton("🦥 SLOW 🦥 (5s)", callback_data="speed_slow")]
+                    [InlineKeyboardButton("ULTRA (0.3s)", callback_data="speed_ultra"),
+                     InlineKeyboardButton("FAST (0.7s)", callback_data="speed_fast")],
+                    [InlineKeyboardButton("NORMAL (1.5s)", callback_data="speed_normal"),
+                     InlineKeyboardButton("SLOW (4s)", callback_data="speed_slow")]
                 ]
                 
                 await update.message.reply_text(
                     f"""
-{self.bi('⚙️ CHOOSE SPEED ⚙️')}
-{self.bi('━━━━━━━━━━')}
-{self.bi('🔢 Count: ' + str(count))}
+{self.bi('CHOOSE SPEED')}
+{self.bi('--------------------')}
+{self.bi('Count: ' + str(count))}
 
-{self.bi('Select speed now 👇')}
+{self.bi('Select speed now')}
 """,
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
@@ -293,9 +307,9 @@ class PremiumSpamBot:
             except ValueError:
                 await update.message.reply_text(
                     f"""
-{self.bi('❌ INVALID NUMBER! ❌')}
+{self.bi('INVALID NUMBER')}
 
-{self.bi('Please send a valid number (1-1000)')}
+{self.bi('Please send a valid number from 1 to 1000')}
 """,
                     parse_mode=ParseMode.MARKDOWN
                 )
@@ -310,14 +324,14 @@ class PremiumSpamBot:
         
         await query.edit_message_text(
             f"""
-{self.bi('⚡ SPAM ATTACK STARTED ⚡')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('👑 Target: @' + username)}
-{self.bi('📝 Type: ' + msg_type)}
-{self.bi('🔢 Count: ' + str(count))}
-{self.bi('⚡ Speed: ' + str(delay) + 's')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('🔥 SENDING MESSAGES... 🔥')}
+{self.bi('SPAM ATTACK STARTED')}
+{self.bi('--------------------')}
+{self.bi('Target: @' + username)}
+{self.bi('Type: ' + msg_type)}
+{self.bi('Count: ' + str(count))}
+{self.bi('Speed: ' + str(delay) + 's')}
+{self.bi('--------------------')}
+{self.bi('SENDING MESSAGES NOW')}
 """,
             parse_mode=ParseMode.MARKDOWN
         )
@@ -327,61 +341,102 @@ class PremiumSpamBot:
         
         for i in range(count):
             try:
+                chat_id = f"@{username}"
+                
                 if msg_type == "text":
-                    msg_text = content.text if content and content.text else "🔥 Premium Spam Bot Message 🔥"
-                    await context.bot.send_message(
-                        chat_id=f"@{username}",
-                        text=msg_text
-                    )
+                    msg_text = content.text if content and content.text else "Premium Spam Bot Message"
+                    await context.bot.send_message(chat_id=chat_id, text=msg_text)
                 
-                elif msg_type == "photo" and content and content.photo:
-                    await context.bot.send_photo(
-                        chat_id=f"@{username}",
-                        photo=content.photo[-1].file_id,
-                        caption=content.caption or ""
-                    )
+                elif msg_type == "photo":
+                    if content and content.photo:
+                        await context.bot.send_photo(
+                            chat_id=chat_id,
+                            photo=content.photo[-1].file_id,
+                            caption=content.caption or ""
+                        )
+                    else:
+                        failed += 1
+                        continue
                 
-                elif msg_type == "video" and content and content.video:
-                    await context.bot.send_video(
-                        chat_id=f"@{username}",
-                        video=content.video.file_id,
-                        caption=content.caption or ""
-                    )
+                elif msg_type == "video":
+                    if content and content.video:
+                        await context.bot.send_video(
+                            chat_id=chat_id,
+                            video=content.video.file_id,
+                            caption=content.caption or ""
+                        )
+                    else:
+                        failed += 1
+                        continue
                 
-                elif msg_type == "document" and content and content.document:
-                    await context.bot.send_document(
-                        chat_id=f"@{username}",
-                        document=content.document.file_id,
-                        caption=content.caption or ""
-                    )
+                elif msg_type == "document":
+                    if content and content.document:
+                        await context.bot.send_document(
+                            chat_id=chat_id,
+                            document=content.document.file_id,
+                            caption=content.caption or ""
+                        )
+                    else:
+                        failed += 1
+                        continue
                 
-                elif msg_type == "audio" and content and content.audio:
-                    await context.bot.send_audio(
-                        chat_id=f"@{username}",
-                        audio=content.audio.file_id,
-                        caption=content.caption or ""
-                    )
+                elif msg_type == "audio":
+                    if content and content.audio:
+                        await context.bot.send_audio(
+                            chat_id=chat_id,
+                            audio=content.audio.file_id,
+                            caption=content.caption or ""
+                        )
+                    else:
+                        failed += 1
+                        continue
                 
-                elif msg_type == "sticker" and content and content.sticker:
-                    await context.bot.send_sticker(
-                        chat_id=f"@{username}",
-                        sticker=content.sticker.file_id
-                    )
+                elif msg_type == "sticker":
+                    if content and content.sticker:
+                        await context.bot.send_sticker(
+                            chat_id=chat_id,
+                            sticker=content.sticker.file_id
+                        )
+                    else:
+                        failed += 1
+                        continue
+                
+                elif msg_type == "voice":
+                    if content and content.voice:
+                        await context.bot.send_voice(
+                            chat_id=chat_id,
+                            voice=content.voice.file_id,
+                            caption=content.caption or ""
+                        )
+                    else:
+                        failed += 1
+                        continue
+                
+                elif msg_type == "video_note":
+                    if content and content.video_note:
+                        await context.bot.send_video_note(
+                            chat_id=chat_id,
+                            video_note=content.video_note.file_id
+                        )
+                    else:
+                        failed += 1
+                        continue
                 
                 else:
                     failed += 1
                     continue
                 
                 success += 1
+                logger.info(f"Message {success}/{count} sent to @{username}")
                 
-                if success % 5 == 0:
+                if success % 10 == 0:
                     try:
                         await query.edit_message_text(
                             f"""
-{self.bi('⚡ SPAMMING IN PROGRESS ⚡')}
-{self.bi('━━━━━━━━━━')}
-{self.bi('✅ Sent: ' + str(success) + '/' + str(count))}
-{self.bi('👑 Target: @' + username)}
+{self.bi('SPAMMING IN PROGRESS')}
+{self.bi('--------------------')}
+{self.bi('Sent: ' + str(success) + '/' + str(count))}
+{self.bi('Target: @' + username)}
 """,
                             parse_mode=ParseMode.MARKDOWN
                         )
@@ -392,18 +447,21 @@ class PremiumSpamBot:
                 
             except Exception as e:
                 failed += 1
-                error_msg = str(e).lower()
-                logger.error(f"Error sending message: {e}")
+                error_str = str(e).lower()
+                logger.error(f"Error: {e}")
                 
-                if "bot was blocked" in error_msg or "can't initiate" in error_msg:
+                if "forbidden" in error_str or "blocked" in error_str or "not enough rights" in error_str:
                     try:
                         await query.edit_message_text(
                             f"""
-{self.bi('❌ CANNOT SEND MESSAGES! ❌')}
-{self.bi('━━━━━━━━━━')}
-{self.bi('✅ Sent: ' + str(success))}
-{self.bi('Bot is blocked or cannot message here.')}
-{self.bi('Try with a group where bot is admin.')}
+{self.bi('CANNOT SEND MESSAGES')}
+{self.bi('--------------------')}
+{self.bi('Sent: ' + str(success))}
+{self.bi('Reason: Bot needs ADMIN rights')}
+
+{self.bi('SOLUTION:')}
+{self.bi('Make bot ADMIN in the group')}
+{self.bi('Enable all permissions')}
 """,
                             parse_mode=ParseMode.MARKDOWN
                         )
@@ -411,16 +469,19 @@ class PremiumSpamBot:
                         pass
                     break
                 
-                if "chat not found" in error_msg or "not found" in error_msg:
+                if "not found" in error_str or "chat not found" in error_str:
                     try:
                         await query.edit_message_text(
                             f"""
-{self.bi('❌ USER/GROUP NOT FOUND! ❌')}
-{self.bi('━━━━━━━━━━')}
-{self.bi('Make sure:')}
-{self.bi('• Username is correct')}
-{self.bi('• Group is public')}
-{self.bi('• Bot is added to group')}
+{self.bi('GROUP NOT FOUND')}
+{self.bi('--------------------')}
+{self.bi('Username: @' + username)}
+{self.bi('Sent: ' + str(success))}
+
+{self.bi('CHECK:')}
+{self.bi('Is username correct')}
+{self.bi('Is group PUBLIC')}
+{self.bi('Is bot added to group')}
 """,
                             parse_mode=ParseMode.MARKDOWN
                         )
@@ -434,15 +495,15 @@ class PremiumSpamBot:
         try:
             await query.message.reply_text(
                 f"""
-{self.bi('🔥 MISSION COMPLETED! 🔥')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('✅ Success: ' + str(success))}
-{self.bi('❌ Failed: ' + str(failed))}
-{self.bi('👑 Target: @' + username)}
-{self.bi('⚡ Speed: ' + str(delay) + 's')}
-{self.bi('📝 Type: ' + msg_type)}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('♛ BOT REMAINS PRIVATE! ♛')}
+{self.bi('MISSION COMPLETED')}
+{self.bi('--------------------')}
+{self.bi('Success: ' + str(success))}
+{self.bi('Failed: ' + str(failed))}
+{self.bi('Target: @' + username)}
+{self.bi('Speed: ' + str(delay) + 's')}
+{self.bi('Type: ' + msg_type)}
+{self.bi('--------------------')}
+{self.bi('BOT REMAINS PRIVATE')}
 """,
                 parse_mode=ParseMode.MARKDOWN
             )
@@ -472,29 +533,22 @@ class PremiumSpamBot:
 
 def main():
     if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN":
-        print("❌ BOT_TOKEN not set!")
+        print("BOT_TOKEN not set")
         return
     
     app = Application.builder().token(BOT_TOKEN).build()
-    bot = PremiumSpamBot()
+    bot = PremiumGroupSpamBot()
     
     app.add_handler(CommandHandler("start", bot.start))
     app.add_handler(CallbackQueryHandler(bot.handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.message_handler))
     app.add_handler(MessageHandler(
-        filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.Document.ALL | filters.Sticker.ALL,
+        filters.PHOTO | filters.VIDEO | filters.AUDIO | filters.VOICE | 
+        filters.Document.ALL | filters.Sticker.ALL | filters.VIDEO_NOTE,
         bot.message_handler
     ))
     
-    print(f"""
-╔══════════════════════════════════════╗
-║   🔥 EXCLUSIVE PREMIUM BOT 🔥       ║
-║   🔐 PRIVATE MODE ACTIVE 🔐         ║
-║   👑 Owner: @{OWNER_USERNAME}      ║
-║   ⚡ Status: Online                 ║
-╚══════════════════════════════════════╝
-    """)
-    
+    print(f"PREMIUM GROUP SPAM BOT STARTED - Owner: @{OWNER_USERNAME}")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
