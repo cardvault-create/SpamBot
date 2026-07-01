@@ -30,10 +30,10 @@ user_states = {}
 saved_groups = {}
 admin_groups = {}
 admin_list = set()
-auto_delete_enabled = True
+auto_delete_enabled = True  # ✅ Global variable properly defined
 last_spam_messages = {}
 active_spam_tasks = {}
-auto_delete_tasks = {}  # ✅ Track auto-delete tasks per group
+auto_delete_tasks = {}
 
 GROUPS_FILE = "saved_groups.json"
 ADMIN_FILE = "admin_list.json"
@@ -152,7 +152,6 @@ class PremiumGroupSpamBot:
     def bi(self, text):
         return f"***{text}***"
     
-    # 10 TEXT STYLES
     def style_bold(self, t):
         m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'))
         return ''.join(m.get(c,c) for c in t)
@@ -182,7 +181,7 @@ class PremiumGroupSpamBot:
         return ''.join(m.get(c,c) for c in t)
     
     def style_sans_bi(self, t):
-        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙙𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
         return ''.join(m.get(c,c) for c in t)
     
     def style_serif_bold(self, t):
@@ -289,7 +288,7 @@ class PremiumGroupSpamBot:
 {self.bi('⭐ 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦 ⭐')}
 {self.bi('• 𝟭𝟬 𝗨𝗻𝗶𝗾𝘂𝗲 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
 {self.bi('• 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗠𝗲𝗺𝗯𝗲𝗿𝘀')}
-{self.bi('• 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 𝘁𝗼 𝗛𝗮𝗹𝘁')}
+{self.bi('• 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻')}
 {self.bi('• 𝟭-𝟭𝟬𝟬 𝗖𝘂𝘀𝘁𝗼𝗺 𝗥𝗮𝗻𝗴𝗲')}
 {self.bi('• 🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝟮𝟰𝗛')}
 {self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝗲𝗻𝘁 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
@@ -416,6 +415,7 @@ class PremiumGroupSpamBot:
             reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
         )
     
+    # ✅ handle_callback WITHOUT global declaration (using self.auto_delete instead)
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
@@ -428,7 +428,7 @@ class PremiumGroupSpamBot:
         
         data = query.data
         
-        # ✅ STOP SPAM
+        # STOP SPAM
         if data == "stop_spam":
             if user_id in active_spam_tasks:
                 active_spam_tasks[user_id] = False
@@ -441,8 +441,8 @@ class PremiumGroupSpamBot:
                 await query.answer("𝗡𝗼 𝗮𝗰𝘁𝗶𝘃𝗲 𝘀𝗽𝗮𝗺!", show_alert=True)
             return
         
-        # ✅ RESTRICTED - OWNER ONLY
-        owner_only = ["get_id_info", "my_stats", "owner_panel", "delete_all_group", "manage_admins", "toggle_auto_delete", "clear_groups"]
+        # RESTRICTED - OWNER ONLY
+        owner_only = ["get_id_info", "my_stats", "owner_panel", "delete_all_group", "manage_admins", "toggle_auto_delete", "clear_groups", "auto_delete_24h", "enable_auto_24", "disable_auto_del"]
         if data in owner_only and user_id != self.owner_id:
             await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿 𝗰𝗮𝗻 𝗮𝗰𝗰𝗲𝘀𝘀 𝘁𝗵𝗶𝘀!", show_alert=True)
             return
@@ -451,6 +451,7 @@ class PremiumGroupSpamBot:
             await self.show_main_menu(query)
             return
         if data == "toggle_auto_delete":
+            # ✅ Use global variable directly
             global auto_delete_enabled
             auto_delete_enabled = not auto_delete_enabled
             self.save_config()
@@ -558,9 +559,6 @@ class PremiumGroupSpamBot:
             )
             return
         if data == "auto_delete_24h":
-            if user_id != self.owner_id:
-                await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿!", show_alert=True)
-                return
             keyboard = [
                 [InlineKeyboardButton("✅ 𝗘𝗡𝗔𝗕𝗟𝗘 𝟮𝟰𝗛 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟", callback_data="enable_auto_24")],
                 [InlineKeyboardButton("❌ 𝗗𝗜𝗦𝗔𝗕𝗟𝗘 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟", callback_data="disable_auto_del")],
@@ -584,7 +582,6 @@ class PremiumGroupSpamBot:
             global auto_delete_enabled
             auto_delete_enabled = True
             self.save_config()
-            # Schedule auto-delete for all saved groups
             for gid in saved_groups:
                 try:
                     chat_id = int(gid)
@@ -786,7 +783,6 @@ class PremiumGroupSpamBot:
                 self.save_user_groups(user_id, user_groups)
                 user_states[user_id].update({"chat_id": chat_id, "group_name": gname, "step": "waiting_for_type"})
                 
-                # ✅ Schedule auto-delete for this group if enabled
                 if auto_delete_enabled:
                     asyncio.create_task(self.schedule_auto_delete_group(context, chat_id, 24))
                 
@@ -936,7 +932,6 @@ class PremiumGroupSpamBot:
                     sent_message_ids.append(sent_msg.message_id)
                     success += 1
                     
-                    # ✅ Schedule auto-delete after 24 hours if enabled
                     if auto_delete_enabled:
                         asyncio.create_task(self.auto_delete_msg_after(context, chat_id, sent_msg.message_id, 24))
                 
