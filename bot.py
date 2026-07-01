@@ -12,8 +12,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAEwf6UR5F0oFSTqS5KTCmNxIVDyysyx4s8")
-OWNER_ID = int(os.getenv("OWNER_ID", "7614459746"))
+BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN")
+OWNER_ID = int(os.getenv("OWNER_ID", "123456789"))
 OWNER_USERNAME = "BeStChEaT_OwNeR"
 
 user_states = {}
@@ -33,73 +33,16 @@ class PremiumGroupSpamBot:
         return f"""
 {self.bi('EXCLUSIVE PREMIUM BOT')}
 {self.bi('ACCESS DENIED')}
-{self.bi('This bot is strictly private')}
 {self.bi('Owner: @' + self.owner_username)}
 """
     
-    async def show_main_menu(self, query):
-        user_id = query.from_user.id
-        
-        if not self.is_owner(user_id):
-            await query.edit_message_text(self.block_msg(), parse_mode=ParseMode.MARKDOWN)
-            return
-        
-        if user_id in user_states:
-            del user_states[user_id]
-        
-        keyboard = [
-            [InlineKeyboardButton("START SPAMMING", callback_data="start_spam")],
-            [InlineKeyboardButton("STATS", callback_data="my_stats"),
-             InlineKeyboardButton("HELP", callback_data="help_menu")],
-            [InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
-            [InlineKeyboardButton("OWNER CHANNEL", url=f"https://t.me/{self.owner_username}")]
-        ]
-        
-        msg = f"""
-{self.bi('EXCLUSIVE PREMIUM SPAM BOT')}
-{self.bi('WELCOME BACK MASTER')}
-
-{self.bi('PREMIUM FEATURES')}
-{self.bi('All Media Types Working')}
-{self.bi('Sticker Photo Video Audio')}
-{self.bi('Document Voice VideoNote')}
-{self.bi('Group ID Support')}
-{self.bi('No Admin Rights Needed')}
-{self.bi('Custom Speed Control')}
-
-{self.bi('STATUS: Private Mode')}
-{self.bi('ACCESS: Owner Only')}
-
-{self.bi('SELECT AN OPTION')}
-"""
-        await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
-    
-    async def show_types_menu(self, query, user_id):
-        chat_id = user_states[user_id].get("chat_id", "N/A")
-        user_states[user_id]["step"] = "waiting_for_type"
-        
-        keyboard = [
-            [InlineKeyboardButton("TEXT", callback_data="type_text"),
-             InlineKeyboardButton("STICKER", callback_data="type_sticker")],
-            [InlineKeyboardButton("PHOTO", callback_data="type_photo"),
-             InlineKeyboardButton("VIDEO", callback_data="type_video")],
-            [InlineKeyboardButton("DOCUMENT", callback_data="type_document"),
-             InlineKeyboardButton("AUDIO", callback_data="type_audio")],
-            [InlineKeyboardButton("VOICE", callback_data="type_voice"),
-             InlineKeyboardButton("VIDEO NOTE", callback_data="type_video_note")],
-            [InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]
-        ]
-        
-        await query.edit_message_text(
-            f"""
-{self.bi('SELECT CONTENT TYPE')}
-{self.bi('Target: ' + str(chat_id))}
-
-{self.bi('Choose what to send')}
-""",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
-        )
+    async def get_chat_info(self, context, chat_id):
+        """Get chat info and return title"""
+        try:
+            chat = await context.bot.get_chat(chat_id)
+            return chat.title if chat.title else str(chat_id)
+        except:
+            return str(chat_id)
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
@@ -125,10 +68,9 @@ class PremiumGroupSpamBot:
 
 {self.bi('PREMIUM FEATURES')}
 {self.bi('All Media Types Working')}
-{self.bi('Sticker Photo Video Audio')}
-{self.bi('Document Voice VideoNote')}
-{self.bi('Group ID Support')}
+{self.bi('Group Name Detection')}
 {self.bi('No Admin Rights Needed')}
+{self.bi('Custom Speed Control')}
 
 {self.bi('SELECT AN OPTION')}
 """
@@ -145,12 +87,29 @@ class PremiumGroupSpamBot:
         
         data = query.data
         
-        # MAIN MENU
         if data == "main_menu":
-            await self.show_main_menu(query)
+            if user_id in user_states:
+                del user_states[user_id]
+            keyboard = [
+                [InlineKeyboardButton("START SPAMMING", callback_data="start_spam")],
+                [InlineKeyboardButton("STATS", callback_data="my_stats"),
+                 InlineKeyboardButton("HELP", callback_data="help_menu")],
+                [InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
+                [InlineKeyboardButton("OWNER CHANNEL", url=f"https://t.me/{self.owner_username}")]
+            ]
+            msg = f"""
+{self.bi('EXCLUSIVE PREMIUM SPAM BOT')}
+{self.bi('WELCOME BACK MASTER')}
+
+{self.bi('PREMIUM FEATURES')}
+{self.bi('All Media Types Working')}
+{self.bi('Group Name Detection')}
+
+{self.bi('SELECT AN OPTION')}
+"""
+            await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
             return
         
-        # START SPAM
         if data == "start_spam":
             user_states[user_id] = {"step": "waiting_for_group"}
             keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
@@ -159,20 +118,17 @@ class PremiumGroupSpamBot:
 {self.bi('SEND GROUP ID OR USERNAME')}
 
 {self.bi('Get Group ID:')}
-{self.bi('1. Add @getidsbot to group')}
-{self.bi('2. Send /id in group')}
-{self.bi('3. Copy ID like -1001234567890')}
+{self.bi('Add @getidsbot to group')}
+{self.bi('Send /id in group')}
+{self.bi('Copy ID: -1001234567890')}
 
 {self.bi('Or send @username')}
-
-{self.bi('Bot needs to be in group')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
             )
             return
         
-        # STATS
         if data == "my_stats":
             keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
             await query.edit_message_text(
@@ -181,9 +137,7 @@ class PremiumGroupSpamBot:
 {self.bi('--------------------')}
 {self.bi('Status: Active Online')}
 {self.bi('Plan: Exclusive Owner')}
-{self.bi('Access: Private Mode')}
 {self.bi('Limits: Unlimited')}
-{self.bi('Speed: Ultra Max')}
 {self.bi('All Media: Working')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -191,32 +145,25 @@ class PremiumGroupSpamBot:
             )
             return
         
-        # HELP
         if data == "help_menu":
             keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
             await query.edit_message_text(
                 f"""
 {self.bi('HOW TO USE')}
 {self.bi('--------------------')}
-
 {self.bi('1. Add bot to group')}
 {self.bi('2. Get Group ID from @getidsbot')}
-{self.bi('3. Click START SPAMMING')}
-{self.bi('4. Send Group ID to bot')}
-{self.bi('5. Select content type')}
-{self.bi('6. Send the content')}
-{self.bi('7. Set count and speed')}
-{self.bi('8. Messages will be sent')}
-
-{self.bi('ALL MEDIA SUPPORTED')}
-{self.bi('STICKER FULLY WORKING')}
+{self.bi('3. Send Group ID to bot')}
+{self.bi('4. Select content type')}
+{self.bi('5. Send content (text/sticker/photo)')}
+{self.bi('6. Set count and speed')}
+{self.bi('7. Messages will be sent')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
             )
             return
         
-        # OWNER PANEL
         if data == "owner_panel":
             keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
             await query.edit_message_text(
@@ -226,7 +173,6 @@ class PremiumGroupSpamBot:
 {self.bi('Owner ID: ' + str(self.owner_id))}
 {self.bi('Username: @' + self.owner_username)}
 {self.bi('Access: Exclusive')}
-{self.bi('Protection: Maximum')}
 {self.bi('All Features Working')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -234,7 +180,6 @@ class PremiumGroupSpamBot:
             )
             return
         
-        # TYPE SELECTION
         if data.startswith("type_"):
             msg_type = data.replace("type_", "")
             user_states[user_id]["msg_type"] = msg_type
@@ -259,12 +204,32 @@ class PremiumGroupSpamBot:
             )
             return
         
-        # SHOW TYPES
         if data == "show_types":
-            await self.show_types_menu(query, user_id)
+            chat_id = user_states[user_id].get("chat_id", "N/A")
+            user_states[user_id]["step"] = "waiting_for_type"
+            
+            keyboard = [
+                [InlineKeyboardButton("TEXT", callback_data="type_text"),
+                 InlineKeyboardButton("STICKER", callback_data="type_sticker")],
+                [InlineKeyboardButton("PHOTO", callback_data="type_photo"),
+                 InlineKeyboardButton("VIDEO", callback_data="type_video")],
+                [InlineKeyboardButton("DOCUMENT", callback_data="type_document"),
+                 InlineKeyboardButton("AUDIO", callback_data="type_audio")],
+                [InlineKeyboardButton("VOICE", callback_data="type_voice"),
+                 InlineKeyboardButton("VIDEO NOTE", callback_data="type_video_note")],
+                [InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]
+            ]
+            
+            await query.edit_message_text(
+                f"""
+{self.bi('SELECT CONTENT TYPE')}
+{self.bi('Target: ' + str(chat_id))}
+""",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
             return
         
-        # SHOW COUNT INPUT
         if data == "show_count":
             user_states[user_id]["step"] = "waiting_for_count"
             keyboard = [[InlineKeyboardButton("BACK TO TYPE SELECTION", callback_data="show_types")]]
@@ -278,37 +243,52 @@ class PremiumGroupSpamBot:
             )
             return
         
-        # SPEED SELECTION
         if data.startswith("speed_"):
             speed_map = {
-                "speed_ultra": 0.3,
-                "speed_fast": 0.7,
-                "speed_normal": 1.5,
-                "speed_slow": 4
+                "speed_ultra": 0.5,
+                "speed_fast": 1,
+                "speed_normal": 2,
+                "speed_slow": 5
             }
             user_states[user_id]["delay"] = speed_map.get(data, 1)
             await self.execute_spam(query, user_id, context)
             return
         
-        # RESEND SAME
         if data == "resend_same":
             if user_id in user_states and "chat_id" in user_states[user_id]:
                 await self.execute_spam(query, user_id, context)
             else:
                 keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
                 await query.edit_message_text(
-                    f"{self.bi('NO PREVIOUS DATA')}\n{self.bi('Start new spam')}",
+                    f"{self.bi('NO DATA FOUND')}\n{self.bi('Start new spam')}",
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
                 )
             return
         
-        # NEW SPAM
         if data == "new_spam":
-            if user_id in user_states and "chat_id" in user_states[user_id]:
-                chat_id = user_states[user_id]["chat_id"]
+            chat_id = user_states.get(user_id, {}).get("chat_id")
+            if chat_id:
                 user_states[user_id] = {"chat_id": chat_id, "step": "waiting_for_type"}
-                await self.show_types_menu(query, user_id)
+                keyboard = [
+                    [InlineKeyboardButton("TEXT", callback_data="type_text"),
+                     InlineKeyboardButton("STICKER", callback_data="type_sticker")],
+                    [InlineKeyboardButton("PHOTO", callback_data="type_photo"),
+                     InlineKeyboardButton("VIDEO", callback_data="type_video")],
+                    [InlineKeyboardButton("DOCUMENT", callback_data="type_document"),
+                     InlineKeyboardButton("AUDIO", callback_data="type_audio")],
+                    [InlineKeyboardButton("VOICE", callback_data="type_voice"),
+                     InlineKeyboardButton("VIDEO NOTE", callback_data="type_video_note")],
+                    [InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]
+                ]
+                await query.edit_message_text(
+                    f"""
+{self.bi('SELECT CONTENT TYPE')}
+{self.bi('Target: ' + str(chat_id))}
+""",
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.MARKDOWN
+                )
             else:
                 user_states[user_id] = {"step": "waiting_for_group"}
                 keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
@@ -319,9 +299,24 @@ class PremiumGroupSpamBot:
                 )
             return
         
-        # CHANGE TYPE
         if data == "change_type":
-            await self.show_types_menu(query, user_id)
+            user_states[user_id]["step"] = "waiting_for_type"
+            keyboard = [
+                [InlineKeyboardButton("TEXT", callback_data="type_text"),
+                 InlineKeyboardButton("STICKER", callback_data="type_sticker")],
+                [InlineKeyboardButton("PHOTO", callback_data="type_photo"),
+                 InlineKeyboardButton("VIDEO", callback_data="type_video")],
+                [InlineKeyboardButton("DOCUMENT", callback_data="type_document"),
+                 InlineKeyboardButton("AUDIO", callback_data="type_audio")],
+                [InlineKeyboardButton("VOICE", callback_data="type_voice"),
+                 InlineKeyboardButton("VIDEO NOTE", callback_data="type_video_note")],
+                [InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]
+            ]
+            await query.edit_message_text(
+                f"{self.bi('SELECT NEW CONTENT TYPE')}",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
             return
     
     async def message_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -337,13 +332,19 @@ class PremiumGroupSpamBot:
         state = user_states[user_id]
         step = state.get("step")
         
-        # WAITING FOR GROUP ID
         if step == "waiting_for_group":
             text = update.message.text
             chat_id = self.parse_chat_id(text)
             
             if chat_id:
+                # Try to get group name
+                try:
+                    group_name = await self.get_chat_info(context, chat_id)
+                except:
+                    group_name = str(chat_id)
+                
                 user_states[user_id]["chat_id"] = chat_id
+                user_states[user_id]["group_name"] = group_name
                 user_states[user_id]["step"] = "waiting_for_type"
                 
                 keyboard = [
@@ -360,8 +361,11 @@ class PremiumGroupSpamBot:
                 
                 await update.message.reply_text(
                     f"""
-{self.bi('GROUP SET SUCCESSFULLY')}
-{self.bi('Target: ' + str(chat_id))}
+{self.bi('GROUP FOUND SUCCESSFULLY')}
+{self.bi('--------------------')}
+{self.bi('Name: ' + group_name)}
+{self.bi('ID: ' + str(chat_id))}
+{self.bi('--------------------')}
 
 {self.bi('NOW SELECT CONTENT TYPE')}
 """,
@@ -375,15 +379,15 @@ class PremiumGroupSpamBot:
 {self.bi('INVALID GROUP ID')}
 {self.bi('Use @getidsbot to get ID')}
 {self.bi('Format: -1001234567890')}
+{self.bi('Or send @username')}
 """,
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
                 )
             return
         
-        # WAITING FOR CONTENT
         if step == "waiting_for_content":
-            # Store the COMPLETE message
+            # Store the message
             user_states[user_id]["content"] = update.message
             user_states[user_id]["step"] = "waiting_for_count"
             
@@ -400,7 +404,6 @@ class PremiumGroupSpamBot:
             )
             return
         
-        # WAITING FOR COUNT
         if step == "waiting_for_count":
             try:
                 count = int(update.message.text)
@@ -410,10 +413,10 @@ class PremiumGroupSpamBot:
                 user_states[user_id]["step"] = "waiting_for_speed"
                 
                 keyboard = [
-                    [InlineKeyboardButton("ULTRA (0.3s)", callback_data="speed_ultra"),
-                     InlineKeyboardButton("FAST (0.7s)", callback_data="speed_fast")],
-                    [InlineKeyboardButton("NORMAL (1.5s)", callback_data="speed_normal"),
-                     InlineKeyboardButton("SLOW (4s)", callback_data="speed_slow")],
+                    [InlineKeyboardButton("ULTRA (0.5s)", callback_data="speed_ultra"),
+                     InlineKeyboardButton("FAST (1s)", callback_data="speed_fast")],
+                    [InlineKeyboardButton("NORMAL (2s)", callback_data="speed_normal"),
+                     InlineKeyboardButton("SLOW (5s)", callback_data="speed_slow")],
                     [InlineKeyboardButton("BACK TO COUNT INPUT", callback_data="show_count")]
                 ]
                 
@@ -421,8 +424,6 @@ class PremiumGroupSpamBot:
                     f"""
 {self.bi('CHOOSE SPEED')}
 {self.bi('Count: ' + str(count))}
-
-{self.bi('Select speed now')}
 """,
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
@@ -430,10 +431,7 @@ class PremiumGroupSpamBot:
             except ValueError:
                 keyboard = [[InlineKeyboardButton("BACK TO TYPE SELECTION", callback_data="show_types")]]
                 await update.message.reply_text(
-                    f"""
-{self.bi('INVALID NUMBER')}
-{self.bi('Send a number from 1 to 1000')}
-""",
+                    f"{self.bi('INVALID NUMBER')}\n{self.bi('Send a number from 1 to 1000')}",
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
                 )
@@ -444,21 +442,17 @@ class PremiumGroupSpamBot:
             return None
         text = text.strip()
         
-        # Group ID: -1001234567890
         if re.match(r'^-?\d{10,}$', text):
             return int(text)
         
-        # @username
         match = re.search(r'@([a-zA-Z0-9_]+)', text)
         if match:
             return f"@{match.group(1)}"
         
-        # t.me/username
         match = re.search(r'(?:https?://)?t\.me/([a-zA-Z0-9_]+)', text)
         if match:
             return f"@{match.group(1)}"
         
-        # Direct username
         if re.match(r'^[a-zA-Z0-9_]{4,}$', text):
             return f"@{text}"
         
@@ -467,6 +461,7 @@ class PremiumGroupSpamBot:
     async def execute_spam(self, query, user_id, context):
         data = user_states.get(user_id, {})
         chat_id = data.get("chat_id", "")
+        group_name = data.get("group_name", str(chat_id))
         count = data.get("count", 1)
         delay = data.get("delay", 1.0)
         msg_type = data.get("msg_type", "text")
@@ -475,10 +470,13 @@ class PremiumGroupSpamBot:
         await query.edit_message_text(
             f"""
 {self.bi('SPAM ATTACK STARTED')}
-{self.bi('Target: ' + str(chat_id))}
+{self.bi('--------------------')}
+{self.bi('Group: ' + group_name)}
+{self.bi('ID: ' + str(chat_id))}
 {self.bi('Type: ' + msg_type)}
 {self.bi('Count: ' + str(count))}
 {self.bi('Speed: ' + str(delay) + 's')}
+{self.bi('--------------------')}
 {self.bi('SENDING NOW')}
 """,
             parse_mode=ParseMode.MARKDOWN
@@ -486,6 +484,7 @@ class PremiumGroupSpamBot:
         
         success = 0
         failed = 0
+        first_error = None
         
         for i in range(count):
             try:
@@ -500,6 +499,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        if not first_error:
+                            first_error = "No sticker found in message"
                 
                 elif msg_type == "photo":
                     if content and content.photo:
@@ -569,16 +570,14 @@ class PremiumGroupSpamBot:
                 else:
                     failed += 1
                 
-                logger.info(f"Sent {success}/{count} to {chat_id}")
-                
-                if success % 5 == 0 or (success > 0 and i == count - 1):
+                if success > 0 and success % 5 == 0:
                     try:
                         await query.edit_message_text(
                             f"""
-{self.bi('SPAMMING')}
+{self.bi('SPAMMING IN PROGRESS')}
+{self.bi('Group: ' + group_name)}
 {self.bi('Sent: ' + str(success) + '/' + str(count))}
 {self.bi('Failed: ' + str(failed))}
-{self.bi('Target: ' + str(chat_id))}
 """,
                             parse_mode=ParseMode.MARKDOWN
                         )
@@ -590,14 +589,19 @@ class PremiumGroupSpamBot:
             except Exception as e:
                 failed += 1
                 error_str = str(e).lower()
-                logger.error(f"Error: {e}")
+                logger.error(f"Error sending message {i+1}: {e}")
+                
+                if not first_error:
+                    first_error = str(e)[:200]
                 
                 if "forbidden" in error_str or "blocked" in error_str:
                     try:
                         await query.edit_message_text(
                             f"""
-{self.bi('CANNOT SEND')}
+{self.bi('CANNOT SEND MESSAGES')}
+{self.bi('Group: ' + group_name)}
 {self.bi('Sent: ' + str(success))}
+{self.bi('Reason: Bot is not in group')}
 {self.bi('Add bot to group first')}
 """,
                             parse_mode=ParseMode.MARKDOWN
@@ -612,7 +616,8 @@ class PremiumGroupSpamBot:
                             f"""
 {self.bi('GROUP NOT FOUND')}
 {self.bi('ID: ' + str(chat_id))}
-{self.bi('Check ID with @getidsbot')}
+{self.bi('Check ID is correct')}
+{self.bi('Bot must be in group')}
 """,
                             parse_mode=ParseMode.MARKDOWN
                         )
@@ -620,28 +625,41 @@ class PremiumGroupSpamBot:
                         pass
                     break
                 
-                if "message to forward not found" in error_str or "failed to get" in error_str:
-                    try:
-                        await query.edit_message_text(
-                            f"""
-{self.bi('CONTENT ERROR')}
-{self.bi('Please send the content again')}
-{self.bi('Make sure to send a valid sticker')}
-""",
-                            parse_mode=ParseMode.MARKDOWN
-                        )
-                    except:
-                        pass
+                if "sticker" in error_str or "failed to get" in error_str:
                     break
                 
-                if failed > 5:
+                if failed > 3:
                     break
         
         # Save for resend
+        user_states[user_id]["last_success"] = success
+        user_states[user_id]["last_failed"] = failed
         user_states[user_id]["last_count"] = count
         user_states[user_id]["last_delay"] = delay
         
-        # Completion buttons
+        # Result message
+        result_text = f"""
+{self.bi('MISSION COMPLETED')}
+{self.bi('--------------------')}
+{self.bi('Group: ' + group_name)}
+{self.bi('ID: ' + str(chat_id))}
+{self.bi('Success: ' + str(success))}
+{self.bi('Failed: ' + str(failed))}
+{self.bi('Type: ' + msg_type)}
+{self.bi('Speed: ' + str(delay) + 's')}
+"""
+        if first_error and success == 0:
+            result_text += f"""
+{self.bi('--------------------')}
+{self.bi('Error: ' + first_error[:150])}
+"""
+        
+        result_text += f"""
+{self.bi('--------------------')}
+
+{self.bi('WHAT DO YOU WANT TO DO')}
+"""
+        
         keyboard = [
             [InlineKeyboardButton("RESEND SAME", callback_data="resend_same"),
              InlineKeyboardButton("NEW SPAM", callback_data="new_spam")],
@@ -652,23 +670,12 @@ class PremiumGroupSpamBot:
         
         try:
             await query.message.reply_text(
-                f"""
-{self.bi('MISSION COMPLETED')}
-{self.bi('--------------------')}
-{self.bi('Success: ' + str(success))}
-{self.bi('Failed: ' + str(failed))}
-{self.bi('Target: ' + str(chat_id))}
-{self.bi('Speed: ' + str(delay) + 's')}
-{self.bi('Type: ' + msg_type)}
-{self.bi('--------------------')}
-
-{self.bi('WHAT DO YOU WANT TO DO')}
-""",
+                result_text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
             )
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"Error sending result: {e}")
 
 def main():
     if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN":
@@ -687,8 +694,9 @@ def main():
         bot.message_handler
     ))
     
-    print(f"PREMIUM GROUP SPAM BOT STARTED - Owner: @{OWNER_USERNAME}")
-    print("ALL MEDIA TYPES WORKING INCLUDING STICKER")
+    print(f"PREMIUM GROUP SPAM BOT STARTED")
+    print(f"Owner: @{OWNER_USERNAME}")
+    print("ALL MEDIA TYPES WORKING")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
