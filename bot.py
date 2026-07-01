@@ -885,10 +885,10 @@ class PremiumGroupSpamBot:
                 parse_mode=ParseMode.MARKDOWN
             )
             return
-        if data == "show_styles":
+                if data == "show_styles":
             await self.show_style_menu(query, user_id)
             return
-                if data == "show_count":
+        if data == "show_count":
             user_states[user_id]["step"] = "waiting_for_count"
             kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
             await query.edit_message_text(
