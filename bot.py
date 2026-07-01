@@ -885,7 +885,7 @@ class PremiumGroupSpamBot:
                 parse_mode=ParseMode.MARKDOWN
             )
             return
-                if data == "show_styles":
+        if data == "show_styles":
             await self.show_style_menu(query, user_id)
             return
         if data == "show_count":
@@ -1270,7 +1270,6 @@ class PremiumGroupSpamBot:
                     sent_message_ids.append(sent_msg.message_id)
                     success += 1
                     
-                    # ✅ Schedule auto-delete after 24 hours if enabled
                     if auto_delete_enabled:
                         asyncio.create_task(self.auto_delete_msg_after(context, chat_id, sent_msg.message_id, 24))
                 
