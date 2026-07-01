@@ -71,100 +71,85 @@ class PremiumGroupSpamBot:
     def bi(self, text):
         return f"***{text}***"
     
-    def make_bold(self, text):
-        if not text:
-            return "𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗦𝗽𝗮𝗺"
-        bold_map = {
-            'a':'𝗮','b':'𝗯','c':'𝗰','d':'𝗱','e':'𝗲','f':'𝗳','g':'𝗴','h':'𝗵','i':'𝗶','j':'𝗷',
-            'k':'𝗸','l':'𝗹','m':'𝗺','n':'𝗻','o':'𝗼','p':'𝗽','q':'𝗾','r':'𝗿','s':'𝘀','t':'𝘁',
-            'u':'𝘂','v':'𝘃','w':'𝘄','x':'𝘅','y':'𝘆','z':'𝘇',
-            'A':'𝗔','B':'𝗕','C':'𝗖','D':'𝗗','E':'𝗘','F':'𝗙','G':'𝗚','H':'𝗛','I':'𝗜','J':'𝗝',
-            'K':'𝗞','L':'𝗟','M':'𝗠','N':'𝗡','O':'𝗢','P':'𝗣','Q':'𝗤','R':'𝗥','S':'𝗦','T':'𝗧',
-            'U':'𝗨','V':'𝗩','W':'𝗪','X':'𝗫','Y':'𝗬','Z':'𝗭',
-            '0':'𝟬','1':'𝟭','2':'𝟮','3':'𝟯','4':'𝟰','5':'𝟱','6':'𝟲','7':'𝟳','8':'𝟴','9':'𝟵'
-        }
-        return ''.join(bold_map.get(c, c) for c in text)
+    # 10 TEXT STYLES
+    def style_bold(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'))
+        return ''.join(m.get(c,c) for c in t)
     
-    def make_italic(self, text):
-        if not text:
-            return "𝑃𝑟𝑒𝑚𝑖𝑢𝑚 𝑆𝑝𝑎𝑚"
-        italic_map = {
-            'a':'𝑎','b':'𝑏','c':'𝑐','d':'𝑑','e':'𝑒','f':'𝑓','g':'𝑔','h':'ℎ','i':'𝑖','j':'𝑗',
-            'k':'𝑘','l':'𝑙','m':'𝑚','n':'𝑛','o':'𝑜','p':'𝑝','q':'𝑞','r':'𝑟','s':'𝑠','t':'𝑡',
-            'u':'𝑢','v':'𝑣','w':'𝑤','x':'𝑥','y':'𝑦','z':'𝑧',
-            'A':'𝐴','B':'𝐵','C':'𝐶','D':'𝐷','E':'𝐸','F':'𝐹','G':'𝐺','H':'𝐻','I':'𝐼','J':'𝐽',
-            'K':'𝐾','L':'𝐿','M':'𝑀','N':'𝑁','O':'𝑂','P':'𝑃','Q':'𝑄','R':'𝑅','S':'𝑆','T':'𝑇',
-            'U':'𝑈','V':'𝑉','W':'𝑊','X':'𝑋','Y':'𝑌','Z':'𝑍'
-        }
-        return ''.join(italic_map.get(c, c) for c in text)
+    def style_italic(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍'))
+        return ''.join(m.get(c,c) for c in t)
     
-    def make_bold_italic(self, text):
-        if not text:
-            return "𝑷𝒓𝒆𝒎𝒊𝒖𝒎 𝑺𝒑𝒂𝒎"
-        bi_map = {
-            'a':'𝒂','b':'𝒃','c':'𝒄','d':'𝒅','e':'𝒆','f':'𝒇','g':'𝒈','h':'𝒉','i':'𝒊','j':'𝒋',
-            'k':'𝒌','l':'𝒍','m':'𝒎','n':'𝒏','o':'𝒐','p':'𝒑','q':'𝒒','r':'𝒓','s':'𝒔','t':'𝒕',
-            'u':'𝒖','v':'𝒗','w':'𝒘','x':'𝒙','y':'𝒚','z':'𝒛',
-            'A':'𝑨','B':'𝑩','C':'𝑪','D':'𝑫','E':'𝑬','F':'𝑭','G':'𝑮','H':'𝑯','I':'𝑰','J':'𝑱',
-            'K':'𝑲','L':'𝑳','M':'𝑴','N':'𝑵','O':'𝑶','P':'𝑷','Q':'𝑸','R':'𝑹','S':'𝑺','T':'𝑻',
-            'U':'𝑼','V':'𝑽','W':'𝑾','X':'𝑿','Y':'𝒀','Z':'𝒁'
-        }
-        return ''.join(bi_map.get(c, c) for c in text)
+    def style_bold_italic(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁'))
+        return ''.join(m.get(c,c) for c in t)
     
-    def make_monospace(self, text):
-        if not text:
-            return "𝙿𝚛𝚎𝚖𝚒𝚞𝚖 𝚂𝚙𝚊𝚖"
-        mono_map = {
-            'a':'𝚊','b':'𝚋','c':'𝚌','d':'𝚍','e':'𝚎','f':'𝚏','g':'𝚐','h':'𝚑','i':'𝚒','j':'𝚓',
-            'k':'𝚔','l':'𝚕','m':'𝚖','n':'𝚗','o':'𝚘','p':'𝚙','q':'𝚚','r':'𝚛','s':'𝚜','t':'𝚝',
-            'u':'𝚞','v':'𝚟','w':'𝚠','x':'𝚡','y':'𝚢','z':'𝚣',
-            'A':'𝙰','B':'𝙱','C':'𝙲','D':'𝙳','E':'𝙴','F':'𝙵','G':'𝙶','H':'𝙷','I':'𝙸','J':'𝙹',
-            'K':'𝙺','L':'𝙻','M':'𝙼','N':'𝙽','O':'𝙾','P':'𝙿','Q':'𝚀','R':'𝚁','S':'𝚂','T':'𝚃',
-            'U':'𝚄','V':'𝚅','W':'𝚆','X':'𝚇','Y':'𝚈','Z':'𝚉'
+    def style_mono(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉'))
+        return ''.join(m.get(c,c) for c in t)
+    
+    def style_sans(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹'))
+        return ''.join(m.get(c,c) for c in t)
+    
+    def style_sans_bold(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭'))
+        return ''.join(m.get(c,c) for c in t)
+    
+    def style_sans_italic(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡'))
+        return ''.join(m.get(c,c) for c in t)
+    
+    def style_sans_bi(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
+        return ''.join(m.get(c,c) for c in t)
+    
+    def style_serif_bold(self, t):
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙'))
+        return ''.join(m.get(c,c) for c in t)
+    
+    def get_style_function(self, style):
+        styles = {
+            "bold": self.style_bold, "italic": self.style_italic,
+            "bold_italic": self.style_bold_italic, "mono": self.style_mono,
+            "sans": self.style_sans, "sans_bold": self.style_sans_bold,
+            "sans_italic": self.style_sans_italic, "sans_bi": self.style_sans_bi,
+            "serif_bold": self.style_serif_bold
         }
-        return ''.join(mono_map.get(c, c) for c in text)
+        return styles.get(style)
     
     def block_msg(self):
         return f"""
 {self.bi('🔐 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗕𝗢𝗧 🔐')}
 {self.bi('⛔ 𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗 ⛔')}
 {self.bi('𝗧𝗵𝗶𝘀 𝗯𝗼𝘁 𝗶𝘀 𝘀𝘁𝗿𝗶𝗰𝘁𝗹𝘆 𝗽𝗿𝗶𝘃𝗮𝘁𝗲')}
-{self.bi('𝗮𝗻𝗱 𝗼𝗽𝗲𝗿𝗮𝘁𝗲𝘀 𝗳𝗼𝗿 𝗼𝘄𝗻𝗲𝗿 𝗼𝗻𝗹𝘆')}
 {self.bi('👑 𝗢𝘄𝗻𝗲𝗿: @' + self.owner_username)}
-{self.bi('❌ 𝗨𝗻𝗮𝘂𝘁𝗵𝗼𝗿𝗶𝘇𝗲𝗱 𝗮𝗰𝗰𝗲𝘀𝘀 𝗯𝗹𝗼𝗰𝗸𝗲𝗱')}
 """
     
     async def get_chat_info(self, context, chat_id):
         try:
             chat = await context.bot.get_chat(chat_id)
-            return chat.title if chat.title else str(chat_id)
-        except:
-            return str(chat_id)
-    
-    async def delete_spam_messages(self, context, chat_id, message_ids):
-        """Delete spam messages from group"""
-        deleted = 0
-        for msg_id in message_ids:
+            title = chat.title if chat.title else "Unknown"
+            ctype = chat.type if chat.type else "Unknown"
+            # Get member count
             try:
-                await context.bot.delete_message(chat_id=chat_id, message_id=msg_id)
-                deleted += 1
-                await asyncio.sleep(0.5)
+                count = await context.bot.get_chat_member_count(chat_id)
             except:
-                pass
-        return deleted
+                count = "N/A"
+            return {"title": title, "type": ctype, "members": count}
+        except:
+            return {"title": str(chat_id), "type": "Unknown", "members": "N/A"}
     
     async def show_main_menu(self, query):
         user_id = query.from_user.id
-        
         if not self.is_authorized(user_id):
-            keyboard = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
-            await query.edit_message_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
+            await query.edit_message_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if user_id in user_states:
             del user_states[user_id]
         
-        auto_status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
+        auto_status = "✅ ON" if auto_delete_enabled else "❌ OFF"
         
         keyboard = [
             [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
@@ -174,39 +159,28 @@ class PremiumGroupSpamBot:
              InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
             [InlineKeyboardButton("📊 𝗦𝗧𝗔𝗧𝗦 📊", callback_data="my_stats"),
              InlineKeyboardButton("🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐", callback_data="owner_panel")],
-            [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘: {auto_status}", callback_data="toggle_auto_delete")],
+            [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟: {auto_status}", callback_data="toggle_auto_delete")],
             [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
         ]
         
         msg = f"""
 {self.bi('👑 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
-
 {self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗖𝗞 𝗠𝗔𝗦𝗧𝗘𝗥 💎')}
-
-{self.bi('⭐ 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦 ⭐')}
-{self.bi('• 𝟰 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀 (𝗕𝗼𝗹𝗱/𝗜𝘁𝗮𝗹𝗶𝗰/𝗕&𝗜/𝗠𝗼𝗻𝗼)')}
-{self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝗲𝗻𝘁 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-{self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗔𝗹𝗹 𝗚𝗿𝗼𝘂𝗽 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-{self.bi('• 𝗦𝗮𝘃𝗲𝗱 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝘆𝘀𝘁𝗲𝗺')}
-{self.bi('• 𝗔𝗱𝗺𝗶𝗻 𝗠𝗮𝗻𝗮𝗴𝗲𝗺𝗲𝗻𝘁')}
-
-{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 𝗕𝗘𝗟𝗢𝗪 📌')}
+{self.bi('⭐ 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀 | 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝘆𝘀𝘁𝗲𝗺 | 𝗚𝗿𝗼𝘂𝗽 𝗜𝗻𝗳𝗼')}
+{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
 """
         await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
-        
         if not self.is_authorized(user_id):
-            keyboard = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
-            await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
+            await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if user_id in user_states:
             del user_states[user_id]
         
-        auto_status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
-        
+        auto_status = "✅ ON" if auto_delete_enabled else "❌ OFF"
         keyboard = [
             [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
             [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
@@ -215,63 +189,51 @@ class PremiumGroupSpamBot:
              InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
             [InlineKeyboardButton("📊 𝗦𝗧𝗔𝗧𝗦 📊", callback_data="my_stats"),
              InlineKeyboardButton("🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐", callback_data="owner_panel")],
-            [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘: {auto_status}", callback_data="toggle_auto_delete")],
+            [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟: {auto_status}", callback_data="toggle_auto_delete")],
             [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
         ]
-        
         msg = f"""
 {self.bi('👑 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
-
 {self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗖𝗞 𝗠𝗔𝗦𝗧𝗘𝗥 💎')}
-
-{self.bi('⭐ 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦 ⭐')}
-{self.bi('• 𝟰 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
-{self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝗲𝗻𝘁 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-{self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗔𝗹𝗹 𝗚𝗿𝗼𝘂𝗽 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-
-{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 𝗕𝗘𝗟𝗢𝗪 📌')}
+{self.bi('⭐ 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀 | 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝘆𝘀𝘁𝗲𝗺')}
+{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
 """
         await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     
     async def getid_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
-        chat_title = update.effective_chat.title if update.effective_chat.title else "Private Chat"
-        chat_type = update.effective_chat.type
+        info = await self.get_chat_info(context, chat_id)
+        chat_title = info["title"]
+        chat_type = info["type"]
+        members = info["members"]
         
         if chat_type in ["group", "supergroup"]:
-            saved_groups[str(chat_id)] = {"name": chat_title, "type": chat_type, "id": str(chat_id)}
+            saved_groups[str(chat_id)] = {"name": chat_title, "type": chat_type, "id": str(chat_id), "members": str(members)}
             self.save_groups()
-            
-            msg = f"""
-{self.bi('📋 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢 📋')}
+        
+        msg = f"""
+{self.bi('📋 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢𝗥𝗠𝗔𝗧𝗜𝗢𝗡 📋')}
+{self.bi('━━━━━━━━━━━━━━━━━━')}
 {self.bi('📌 𝗡𝗮𝗺𝗲: ' + chat_title)}
 {self.bi('🆔 𝗜𝗗: ' + str(chat_id))}
-{self.bi('✅ 𝗔𝘂𝘁𝗼-𝗦𝗮𝘃𝗲𝗱')}
-"""
-        else:
-            msg = f"""
-{self.bi('💬 𝗖𝗛𝗔𝗧 𝗜𝗡𝗙𝗢 💬')}
-{self.bi('🆔 𝗜𝗗: ' + str(chat_id))}
+{self.bi('📂 𝗧𝘆𝗽𝗲: ' + chat_type)}
+{self.bi('👥 𝗠𝗲𝗺𝗯𝗲𝗿𝘀: ' + str(members))}
+{self.bi('━━━━━━━━━━━━━━━━━━')}
+{self.bi('✅ 𝗚𝗿𝗼𝘂𝗽 𝗔𝘂𝘁𝗼-𝗦𝗮𝘃𝗲𝗱')}
 """
         await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
     
     async def deleteall_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
         if not self.is_authorized(user_id):
-            keyboard = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
-            await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
+            await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         user_states[user_id] = {"step": "waiting_for_delete_group"}
-        keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+        kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
         await update.message.reply_text(
-            f"""
-{self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗔𝗟𝗟 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦 🗑')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}
-{self.bi('⚠ 𝗕𝗼𝘁 𝗺𝘂𝘀𝘁 𝗯𝗲 𝗔𝗗𝗠𝗜𝗡')}
-""",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
+            f"{self.bi('🗑 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗 𝘁𝗼 𝗱𝗲𝗹𝗲𝘁𝗲 🗑')}",
+            reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
         )
     
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -280,8 +242,8 @@ class PremiumGroupSpamBot:
         user_id = query.from_user.id
         
         if not self.is_authorized(user_id):
-            keyboard = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
-            await query.edit_message_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
+            await query.edit_message_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         
         data = query.data
@@ -289,337 +251,257 @@ class PremiumGroupSpamBot:
         if data == "main_menu":
             await self.show_main_menu(query)
             return
-        
         if data == "toggle_auto_delete":
             global auto_delete_enabled
             auto_delete_enabled = not auto_delete_enabled
             self.save_config()
-            status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
-            await query.answer(f"Auto Delete {status}", show_alert=True)
+            await query.answer(f"Auto Delete {'ON' if auto_delete_enabled else 'OFF'}", show_alert=True)
             await self.show_main_menu(query)
             return
-        
         if data == "delete_last_spam":
             if user_id in last_spam_messages:
-                spam_data = last_spam_messages[user_id]
-                chat_id = spam_data.get("chat_id")
-                msg_ids = spam_data.get("message_ids", [])
-                
+                sd = last_spam_messages[user_id]
+                await query.edit_message_text(f"{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗶𝗻𝗴...')}", parse_mode=ParseMode.MARKDOWN)
+                deleted = 0
+                for mid in sd.get("message_ids", []):
+                    try:
+                        await context.bot.delete_message(chat_id=sd["chat_id"], message_id=mid)
+                        deleted += 1
+                        await asyncio.sleep(0.05)
+                    except:
+                        pass
+                kb = [[InlineKeyboardButton("🔙 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
                 await query.edit_message_text(
-                    f"{self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗜𝗡𝗚 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦... 🗑')}",
-                    parse_mode=ParseMode.MARKDOWN
-                )
-                
-                deleted = await self.delete_spam_messages(context, chat_id, msg_ids)
-                
-                keyboard = [[InlineKeyboardButton("🔙 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
-                await query.edit_message_text(
-                    f"""
-{self.bi('✅ 𝗗𝗘𝗟𝗘𝗧𝗘𝗗 ✅')}
-{self.bi('━━━━━━━━━━')}
-{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + '/' + str(len(msg_ids)))}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + str(chat_id))}
-""",
-                    reply_markup=InlineKeyboardMarkup(keyboard),
-                    parse_mode=ParseMode.MARKDOWN
+                    f"{self.bi('✅ 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + '/' + str(len(sd.get('message_ids',[]))))}",
+                    reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
                 )
                 del last_spam_messages[user_id]
             else:
-                await query.answer("No messages to delete!", show_alert=True)
+                await query.answer("No messages to delete", show_alert=True)
             return
-        
         if data == "get_id_info":
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
             await query.edit_message_text(
-                f"""
-{self.bi('🆔 𝗛𝗢𝗪 𝗧𝗢 𝗚𝗘𝗧 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 🆔')}
-
-{self.bi('📌 𝗔𝗱𝗱 𝗯𝗼𝘁 𝘁𝗼 𝗴𝗿𝗼𝘂𝗽 𝗮𝘀 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗶𝗻 𝗴𝗿𝗼𝘂𝗽')}
-{self.bi('📌 𝗕𝗼𝘁 𝘀𝗵𝗼𝘄𝘀 𝗜𝗗 & 𝗔𝗨𝗧𝗢-𝗦𝗔𝗩𝗘𝗦')}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('🆔 /GetId 𝗶𝗻 𝗴𝗿𝗼𝘂𝗽 𝘁𝗼 𝗴𝗲𝘁 𝗜𝗗')}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
-        
         if data == "saved_groups_menu":
             if not saved_groups:
-                keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
-                await query.edit_message_text(
-                    f"{self.bi('📋 𝗡𝗼 𝗴𝗿𝗼𝘂𝗽𝘀 𝘀𝗮𝘃𝗲𝗱')}\n{self.bi('𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗶𝗻 𝗴𝗿𝗼𝘂𝗽')}",
-                    reply_markup=InlineKeyboardMarkup(keyboard),
-                    parse_mode=ParseMode.MARKDOWN
-                )
+                kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+                await query.edit_message_text(f"{self.bi('📋 𝗡𝗼 𝗴𝗿𝗼𝘂𝗽𝘀')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
                 return
-            
             keyboard = []
             for gid, ginfo in list(saved_groups.items())[:20]:
                 name = ginfo.get("name", gid)[:30]
                 keyboard.append([InlineKeyboardButton(f"📌 {name}", callback_data=f"sg_{gid}")])
-            
             keyboard.append([InlineKeyboardButton("🗑 𝗖𝗟𝗘𝗔𝗥 𝗔𝗟𝗟", callback_data="clear_groups")])
             keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")])
-            
             await query.edit_message_text(
-                f"{self.bi('📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 (' + str(len(saved_groups)) + ')')}\n{self.bi('👇 𝗦𝗘𝗟𝗘𝗖𝗧 👇')}",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('📋 𝗚𝗥𝗢𝗨𝗣𝗦 (' + str(len(saved_groups)) + ')')}\n{self.bi('👇 𝗦𝗘𝗟𝗘𝗖𝗧')}",
+                reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
             )
             return
-        
         if data.startswith("sg_"):
-            group_id = data.replace("sg_", "")
-            ginfo = saved_groups.get(group_id, {})
-            gname = ginfo.get("name", group_id)
+            gid = data.replace("sg_", "")
+            ginfo = saved_groups.get(gid, {})
+            gname = ginfo.get("name", gid)
             try:
-                chat_id = int(group_id)
+                chat_id = int(gid)
             except:
-                chat_id = group_id
-            
+                chat_id = gid
             user_states[user_id] = {"step": "waiting_for_type", "chat_id": chat_id, "group_name": gname}
-            
-            keyboard = [
-                [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="type_text"),
-                 InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="type_bold")],
-                [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_italic"),
-                 InlineKeyboardButton("𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_bold_italic")],
-                [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢𝗦𝗣𝗔𝗖𝗘", callback_data="type_mono")],
-                [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="type_sticker"),
-                 InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="type_photo")],
-                [InlineKeyboardButton("🎥 𝗩𝗜𝗗𝗘𝗢", callback_data="type_video"),
-                 InlineKeyboardButton("📄 𝗗𝗢𝗖", callback_data="type_document")],
-                [InlineKeyboardButton("🎵 𝗔𝗨𝗗𝗜𝗢", callback_data="type_audio"),
-                 InlineKeyboardButton("🎤 𝗩𝗢𝗜𝗖𝗘", callback_data="type_voice")],
-                [InlineKeyboardButton("📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘", callback_data="type_video_note")],
-                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="saved_groups_menu")]
-            ]
-            
-            await query.edit_message_text(
-                f"""
-{self.bi('✅ 𝗚𝗥𝗢𝗨𝗣 𝗦𝗘𝗟𝗘𝗖𝗧𝗘𝗗 ✅')}
-{self.bi('📌 ' + gname)}
-{self.bi('🆔 ' + str(chat_id))}
-
-{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘/𝗧𝗬𝗣𝗘 🎯')}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            await self.show_style_menu(query, user_id)
             return
-        
         if data == "clear_groups":
             saved_groups.clear()
             self.save_groups()
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
-            await query.edit_message_text(f"{self.bi('🗑 𝗖𝗟𝗘𝗔𝗥𝗘𝗗')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            await query.edit_message_text(f"{self.bi('🗑 𝗖𝗟𝗘𝗔𝗥𝗘𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if data == "add_group_manual":
             user_states[user_id] = {"step": "waiting_for_group_manual"}
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
-            await query.edit_message_text(
-                f"{self.bi('➕ 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}\n{self.bi('𝗙𝗼𝗿𝗺𝗮𝘁: -𝟭𝟬𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵𝟬')}",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            await query.edit_message_text(f"{self.bi('➕ 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if data == "start_spam":
             user_states[user_id] = {"step": "waiting_for_group"}
-            keyboard = [
-                [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦", callback_data="saved_groups_menu")],
-                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
-            ]
-            await query.edit_message_text(
-                f"{self.bi('🔥 𝗦𝗘𝗡𝗗 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗')}\n{self.bi('𝗙𝗼𝗿𝗺𝗮𝘁: -𝟭𝟬𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵𝟬')}",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            kb = [[InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗", callback_data="saved_groups_menu"), InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            await query.edit_message_text(f"{self.bi('🔥 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if data == "my_stats":
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
             await query.edit_message_text(
-                f"""
-{self.bi('📊 𝗦𝗧𝗔𝗧𝗦 📊')}
-{self.bi('👑 𝗔𝗰𝘁𝗶𝘃𝗲')}
-{self.bi('📋 𝗚𝗿𝗼𝘂𝗽𝘀: ' + str(len(saved_groups)))}
-{self.bi('👥 𝗔𝗱𝗺𝗶𝗻𝘀: ' + str(len(admin_list)))}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('📊 𝗦𝗧𝗔𝗧𝗦')}\n{self.bi('📋 ' + str(len(saved_groups)) + ' | 👥 ' + str(len(admin_list)))}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
-        
         if data == "help_menu":
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
             await query.edit_message_text(
-                f"""
-{self.bi('❓ 𝗛𝗘𝗟𝗣 ❓')}
-{self.bi('📌 𝗔𝗱𝗱 𝗯𝗼𝘁 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('📌 /𝗚𝗲𝘁𝗜𝗱 𝗳𝗼𝗿 𝗜𝗗')}
-{self.bi('📌 𝗖𝗵𝗼𝗼𝘀𝗲 𝘀𝘁𝘆𝗹𝗲')}
-{self.bi('📌 𝗗𝗲𝗹𝗲𝘁𝗲 𝗮𝗳𝘁𝗲𝗿 𝘀𝗽𝗮𝗺')}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('❓ /GetId | /deleteall | 10 Styles')}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
-        
         if data == "owner_panel":
-            keyboard = [
+            kb = [
                 [InlineKeyboardButton("👥 𝗠𝗔𝗡𝗔𝗚𝗘 𝗔𝗗𝗠𝗜𝗡𝗦", callback_data="manage_admins")],
                 [InlineKeyboardButton("🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗔𝗟𝗟 𝗚𝗥𝗢𝗨𝗣 𝗠𝗦𝗚", callback_data="delete_all_group")],
                 [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
             ]
             await query.edit_message_text(
-                f"""
-{self.bi('🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐')}
-{self.bi('👑 @' + self.owner_username)}
-{self.bi('👥 𝗔𝗱𝗺𝗶𝗻𝘀: ' + str(len(admin_list)))}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟')}\n{self.bi('👑 @' + self.owner_username)}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
-        
         if data == "delete_all_group":
-            user_states[user_id] = {"step": "waiting_for_delete_group"}
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
+            # Show saved groups to select for delete
+            if not saved_groups:
+                kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
+                await query.edit_message_text(f"{self.bi('📋 𝗡𝗼 𝗴𝗿𝗼𝘂𝗽𝘀')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
+                return
+            keyboard = []
+            for gid, ginfo in list(saved_groups.items())[:20]:
+                name = ginfo.get("name", gid)[:30]
+                keyboard.append([InlineKeyboardButton(f"🗑 {name}", callback_data=f"delg_{gid}")])
+            keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")])
             await query.edit_message_text(
-                f"{self.bi('🗑 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('🗑 𝗦𝗘𝗟𝗘𝗖𝗧 𝗚𝗥𝗢𝗨𝗣 𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘 🗑')}",
+                reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
             )
             return
-        
+        if data.startswith("delg_"):
+            gid = data.replace("delg_", "")
+            try:
+                chat_id = int(gid)
+            except:
+                chat_id = gid
+            await query.edit_message_text(f"{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗶𝗻𝗴 𝗺𝘀𝗴 𝗳𝗿𝗼𝗺: ' + str(chat_id))}", parse_mode=ParseMode.MARKDOWN)
+            # Try to delete recent messages
+            deleted = 0
+            try:
+                # This is limited - bot can only delete messages it sent recently
+                async for msg in context.bot.get_chat_history(chat_id=chat_id, limit=100):
+                    if msg.from_user and msg.from_user.id == context.bot.id:
+                        try:
+                            await context.bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
+                            deleted += 1
+                            await asyncio.sleep(0.05)
+                        except:
+                            pass
+            except:
+                pass
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
+            await query.edit_message_text(
+                f"{self.bi('✅ 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + ' 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
+            )
+            return
         if data == "manage_admins":
             if user_id != self.owner_id:
                 await query.answer("Only Owner!", show_alert=True)
                 return
-            
-            atext = f"{self.bi('👥 𝗔𝗗𝗠𝗜𝗡𝗦 👥')}\n"
+            atext = f"{self.bi('👥 𝗔𝗗𝗠𝗜𝗡𝗦')}\n"
             for aid in admin_list:
                 if aid != self.owner_id:
                     atext += f"{self.bi('• ' + str(aid))}\n"
             if len(admin_list) <= 1:
                 atext += f"{self.bi('• 𝗡𝗼𝗻𝗲')}\n"
             atext += f"\n{self.bi('👇 𝗦𝗲𝗻𝗱 𝗜𝗗:')}"
-            
             user_states[user_id] = {"step": "waiting_for_admin_id"}
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
-            await query.edit_message_text(atext, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
+            await query.edit_message_text(atext, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
-        if data.startswith("type_"):
-            msg_type = data.replace("type_", "")
+        if data.startswith("style_"):
+            msg_type = data.replace("style_", "")
             user_states[user_id]["msg_type"] = msg_type
             user_states[user_id]["step"] = "waiting_for_content"
-            
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_types")]]
-            
-            msgs = {
-                "text": f"{self.bi('💬 𝗦𝗘𝗡𝗗 𝗡𝗢𝗥𝗠𝗔𝗟 𝗧𝗘𝗫𝗧 💬')}",
-                "bold": f"{self.bi('𝗕 𝗦𝗘𝗡𝗗 𝗧𝗘𝗫𝗧 𝗙𝗢𝗥 𝗕𝗢𝗟𝗗 𝗕')}",
-                "italic": f"{self.bi('𝑰 𝗦𝗘𝗡𝗗 𝗧𝗘𝗫𝗧 𝗙𝗢𝗥 𝗜𝗧𝗔𝗟𝗜𝗖 𝑰')}",
-                "bold_italic": f"{self.bi('𝑩𝑰 𝗦𝗘𝗡𝗗 𝗧𝗘𝗫𝗧 𝗙𝗢𝗥 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖 𝑩𝑰')}",
-                "mono": f"{self.bi('𝙼 𝗦𝗘𝗡𝗗 𝗧𝗘𝗫𝗧 𝗙𝗢𝗥 𝗠𝗢𝗡𝗢 𝙼')}",
-                "sticker": f"{self.bi('🎯 𝗦𝗘𝗡𝗗 𝗦𝗧𝗜𝗖𝗞𝗘𝗥 🎯')}",
-                "photo": f"{self.bi('🖼 𝗦𝗘𝗡𝗗 𝗣𝗛𝗢𝗧𝗢 🖼')}",
-                "video": f"{self.bi('🎥 𝗦𝗘𝗡𝗗 𝗩𝗜𝗗𝗘𝗢 🎥')}",
-                "document": f"{self.bi('📄 𝗦𝗘𝗡𝗗 𝗗𝗢𝗖 📄')}",
-                "audio": f"{self.bi('🎵 𝗦𝗘𝗡𝗗 𝗔𝗨𝗗𝗜𝗢 🎵')}",
-                "voice": f"{self.bi('🎤 𝗦𝗘𝗡𝗗 𝗩𝗢𝗜𝗖𝗘 🎤')}",
-                "video_note": f"{self.bi('📹 𝗦𝗘𝗡𝗗 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘 📹')}"
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
+            style_names = {
+                "text": "💬 𝗡𝗢𝗥𝗠𝗔𝗟", "bold": "𝗕 𝗕𝗢𝗟𝗗", "italic": "𝑰 𝗜𝗧𝗔𝗟𝗜𝗖",
+                "bold_italic": "𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", "mono": "𝙼 𝗠𝗢𝗡𝗢",
+                "sans": "𝖲 𝗦𝗔𝗡𝗦", "sans_bold": "𝗦𝗕 𝗦𝗔𝗡𝗦 𝗕𝗢𝗟𝗗",
+                "sans_italic": "𝘚𝘐 𝘚𝘈𝘕𝘚 𝘐𝘛𝘈𝘓𝘐𝘊", "sans_bi": "𝙎𝘽𝙄 𝙎𝘼𝙉𝙎 𝘽𝙄",
+                "serif_bold": "𝐒𝐁 𝐒𝐄𝐑𝐈𝐅 𝐁𝐎𝐋𝐃"
             }
-            await query.edit_message_text(msgs.get(msg_type, self.bi('📤 𝗦𝗘𝗡𝗗')), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            sn = style_names.get(msg_type, "SEND")
+            await query.edit_message_text(f"{self.bi(sn)}\n{self.bi('📤 𝗦𝗲𝗻𝗱 𝘆𝗼𝘂𝗿 𝘁𝗲𝘅𝘁:')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
-        if data == "show_types":
-            chat_id = user_states[user_id].get("chat_id", "N/A")
-            gname = user_states[user_id].get("group_name", str(chat_id))
-            user_states[user_id]["step"] = "waiting_for_type"
-            
-            keyboard = [
-                [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="type_text"),
-                 InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="type_bold")],
-                [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_italic"),
-                 InlineKeyboardButton("𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_bold_italic")],
-                [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢", callback_data="type_mono")],
-                [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="type_sticker"),
-                 InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="type_photo")],
-                [InlineKeyboardButton("🎥 𝗩𝗜𝗗𝗘𝗢", callback_data="type_video"),
-                 InlineKeyboardButton("📄 𝗗𝗢𝗖", callback_data="type_document")],
-                [InlineKeyboardButton("🎵 𝗔𝗨𝗗𝗜𝗢", callback_data="type_audio"),
-                 InlineKeyboardButton("🎤 𝗩𝗢𝗜𝗖𝗘", callback_data="type_voice")],
-                [InlineKeyboardButton("📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘", callback_data="type_video_note")],
-                [InlineKeyboardButton("🔙 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
-            ]
-            
-            await query.edit_message_text(
-                f"{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘')}\n{self.bi('📌 ' + gname)}",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
-            )
+        if data.startswith("media_"):
+            mtype = data.replace("media_", "")
+            user_states[user_id]["msg_type"] = mtype
+            user_states[user_id]["step"] = "waiting_for_content"
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
+            media_names = {
+                "sticker": "🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", "photo": "🖼 𝗣𝗛𝗢𝗧𝗢", "video": "🎥 𝗩𝗜𝗗𝗘𝗢",
+                "document": "📄 𝗗𝗢𝗖", "audio": "🎵 𝗔𝗨𝗗𝗜𝗢", "voice": "🎤 𝗩𝗢𝗜𝗖𝗘",
+                "video_note": "📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘"
+            }
+            mn = media_names.get(mtype, "SEND")
+            await query.edit_message_text(f"{self.bi(mn)}\n{self.bi('📤 𝗦𝗲𝗻𝗱 𝗻𝗼𝘄:')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
+        if data == "show_styles":
+            await self.show_style_menu(query, user_id)
+            return
         if data == "show_count":
             user_states[user_id]["step"] = "waiting_for_count"
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_types")]]
-            await query.edit_message_text(f"{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬?')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
+            await query.edit_message_text(f"{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬? (𝟭-𝟭𝟬𝟬𝟬)')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if data.startswith("speed_"):
-            speed_map = {"speed_ultra": 0.5, "speed_fast": 1, "speed_normal": 2, "speed_slow": 5}
-            user_states[user_id]["delay"] = speed_map.get(data, 1)
+            speed_map = {"speed_ultra": 0.1, "speed_fast": 0.3, "speed_normal": 0.5, "speed_slow": 1}
+            user_states[user_id]["delay"] = speed_map.get(data, 0.1)
             await self.execute_spam(query, user_id, context)
             return
-        
         if data == "resend_same":
             if user_id in user_states and "chat_id" in user_states[user_id]:
                 await self.execute_spam(query, user_id, context)
             return
-        
         if data == "new_spam":
             chat_id = user_states.get(user_id, {}).get("chat_id")
             gname = user_states.get(user_id, {}).get("group_name", str(chat_id))
             if chat_id:
                 user_states[user_id] = {"chat_id": chat_id, "group_name": gname, "step": "waiting_for_type"}
-                keyboard = [
-                    [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="type_text"),
-                     InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="type_bold")],
-                    [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_italic"),
-                     InlineKeyboardButton("𝑩𝑰 𝗕&𝗜", callback_data="type_bold_italic")],
-                    [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢", callback_data="type_mono")],
-                    [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="type_sticker"),
-                     InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="type_photo")],
-                    [InlineKeyboardButton("🔙 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
-                ]
-                await query.edit_message_text(f"{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+                await self.show_style_menu(query, user_id)
             return
-        
-        if data == "change_type":
-            user_states[user_id]["step"] = "waiting_for_type"
-            keyboard = [
-                [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="type_text"),
-                 InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="type_bold")],
-                [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_italic"),
-                 InlineKeyboardButton("𝑩𝑰 𝗕&𝗜", callback_data="type_bold_italic")],
-                [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢", callback_data="type_mono")],
-                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
-            ]
-            await query.edit_message_text(f"{self.bi('🔄 𝗡𝗘𝗪 𝗦𝗧𝗬𝗟𝗘')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        if data == "change_style":
+            await self.show_style_menu(query, user_id)
             return
+    
+    async def show_style_menu(self, query, user_id):
+        gname = user_states[user_id].get("group_name", "N/A")
+        user_states[user_id]["step"] = "waiting_for_type"
+        keyboard = [
+            [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="style_text"),
+             InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="style_bold")],
+            [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="style_italic"),
+             InlineKeyboardButton("𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="style_bold_italic")],
+            [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢", callback_data="style_mono"),
+             InlineKeyboardButton("𝖲 𝗦𝗔𝗡𝗦", callback_data="style_sans")],
+            [InlineKeyboardButton("𝗦𝗕 𝗦𝗔𝗡𝗦 𝗕𝗢𝗟𝗗", callback_data="style_sans_bold"),
+             InlineKeyboardButton("𝘚𝘐 𝘚𝘈𝘕𝘚 𝘐𝘛𝘈𝘓𝘐𝘊", callback_data="style_sans_italic")],
+            [InlineKeyboardButton("𝙎𝘽𝙄 𝙎𝘼𝙉𝙎 𝘽𝙄", callback_data="style_sans_bi"),
+             InlineKeyboardButton("𝐒𝐁 𝐒𝐄𝐑𝐈𝐅 𝐁𝐎𝐋𝐃", callback_data="style_serif_bold")],
+            [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="media_sticker"),
+             InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="media_photo")],
+            [InlineKeyboardButton("🎥 𝗩𝗜𝗗𝗘𝗢", callback_data="media_video"),
+             InlineKeyboardButton("📄 𝗗𝗢𝗖", callback_data="media_document")],
+            [InlineKeyboardButton("🎵 𝗔𝗨𝗗𝗜𝗢", callback_data="media_audio"),
+             InlineKeyboardButton("🎤 𝗩𝗢𝗜𝗖𝗘", callback_data="media_voice")],
+            [InlineKeyboardButton("📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘", callback_data="media_video_note")],
+            [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
+        ]
+        await query.edit_message_text(
+            f"{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘/𝗠𝗘𝗗𝗜𝗔')}\n{self.bi('📌 ' + gname)}",
+            reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
+        )
     
     async def message_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
-        
         if not self.is_authorized(user_id):
-            keyboard = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
-            await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
+            await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
-        
         if user_id not in user_states:
             return
         
@@ -629,9 +511,8 @@ class PremiumGroupSpamBot:
         if step == "waiting_for_admin_id":
             if user_id != self.owner_id:
                 return
-            text = update.message.text.strip()
             try:
-                tid = int(text)
+                tid = int(update.message.text.strip())
                 if tid in admin_list:
                     admin_list.remove(tid)
                     self.save_admins()
@@ -649,14 +530,22 @@ class PremiumGroupSpamBot:
             try:
                 chat_id = int(text) if re.match(r'^-?\d+$', text) else text
                 await update.message.reply_text(
-                    f"""
-{self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗥𝗘𝗤𝗨𝗘𝗦𝗧 🗑')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + str(chat_id))}
-{self.bi('⚠ 𝗕𝗼𝘁 𝗺𝘂𝘀𝘁 𝗯𝗲 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('💡 𝗕𝗼𝘁 𝗰𝗮𝗻 𝗱𝗲𝗹𝗲𝘁𝗲 𝗿𝗲𝗰𝗲𝗻𝘁 𝗺𝘀𝗴')}
-""",
+                    f"{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗶𝗻𝗴 𝗳𝗿𝗼𝗺: ' + str(chat_id))}\n{self.bi('⚠ 𝗕𝗼𝘁 𝗺𝘂𝘀𝘁 𝗯𝗲 𝗔𝗗𝗠𝗜𝗡')}",
                     parse_mode=ParseMode.MARKDOWN
                 )
+                deleted = 0
+                try:
+                    async for msg in context.bot.get_chat_history(chat_id=chat_id, limit=100):
+                        if msg.from_user and msg.from_user.id == context.bot.id:
+                            try:
+                                await context.bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
+                                deleted += 1
+                                await asyncio.sleep(0.05)
+                            except:
+                                pass
+                except:
+                    pass
+                await update.message.reply_text(f"{self.bi('✅ 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted))}", parse_mode=ParseMode.MARKDOWN)
             except:
                 await update.message.reply_text(f"{self.bi('❌ 𝗜𝗻𝘃𝗮𝗹𝗶𝗱')}", parse_mode=ParseMode.MARKDOWN)
             if user_id in user_states:
@@ -666,55 +555,23 @@ class PremiumGroupSpamBot:
         if step in ["waiting_for_group_manual", "waiting_for_group"]:
             text = update.message.text
             chat_id = self.parse_chat_id(text)
-            
             if chat_id:
-                try:
-                    gname = await self.get_chat_info(context, chat_id)
-                except:
-                    gname = str(chat_id)
-                
-                saved_groups[str(chat_id)] = {"name": gname, "id": str(chat_id)}
+                info = await self.get_chat_info(context, chat_id)
+                gname = info["title"]
+                saved_groups[str(chat_id)] = {"name": gname, "id": str(chat_id), "members": str(info["members"])}
                 self.save_groups()
-                
                 user_states[user_id].update({"chat_id": chat_id, "group_name": gname, "step": "waiting_for_type"})
-                
-                keyboard = [
-                    [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="type_text"),
-                     InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="type_bold")],
-                    [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_italic"),
-                     InlineKeyboardButton("𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="type_bold_italic")],
-                    [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢𝗦𝗣𝗔𝗖𝗘", callback_data="type_mono")],
-                    [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="type_sticker"),
-                     InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="type_photo")],
-                    [InlineKeyboardButton("🎥 𝗩𝗜𝗗𝗘𝗢", callback_data="type_video"),
-                     InlineKeyboardButton("📄 𝗗𝗢𝗖", callback_data="type_document")],
-                    [InlineKeyboardButton("🎵 𝗔𝗨𝗗𝗜𝗢", callback_data="type_audio"),
-                     InlineKeyboardButton("🎤 𝗩𝗢𝗜𝗖𝗘", callback_data="type_voice")],
-                    [InlineKeyboardButton("📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘", callback_data="type_video_note")],
-                    [InlineKeyboardButton("🔙 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
-                ]
-                
-                await update.message.reply_text(
-                    f"""
-{self.bi('✅ 𝗚𝗥𝗢𝗨𝗣 𝗙𝗢𝗨𝗡𝗗 ✅')}
-{self.bi('📌 ' + gname)}
-{self.bi('🆔 ' + str(chat_id))}
-
-{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘 🎯')}
-""",
-                    reply_markup=InlineKeyboardMarkup(keyboard),
-                    parse_mode=ParseMode.MARKDOWN
-                )
+                await self.show_style_menu_for_message(update, user_id)
             else:
-                keyboard = [[InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗", callback_data="saved_groups_menu"), InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
-                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+                kb = [[InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗", callback_data="saved_groups_menu"), InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         
         if step == "waiting_for_content":
             user_states[user_id]["content"] = update.message
             user_states[user_id]["step"] = "waiting_for_count"
-            keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_types")]]
-            await update.message.reply_text(f"{self.bi('✅ 𝗖𝗢𝗡𝗧𝗘𝗡𝗧 𝗢𝗞')}\n{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬?')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
+            await update.message.reply_text(f"{self.bi('✅ 𝗢𝗞')}\n{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬?')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         
         if step == "waiting_for_count":
@@ -723,24 +580,48 @@ class PremiumGroupSpamBot:
                 count = max(1, min(count, 1000))
                 user_states[user_id]["count"] = count
                 user_states[user_id]["step"] = "waiting_for_speed"
-                
                 keyboard = [
-                    [InlineKeyboardButton("⚡ 𝗨𝗟𝗧𝗥𝗔 (𝟬.𝟱𝘀)", callback_data="speed_ultra"),
-                     InlineKeyboardButton("🚀 𝗙𝗔𝗦𝗧 (𝟭𝘀)", callback_data="speed_fast")],
-                    [InlineKeyboardButton("🐢 𝗡𝗢𝗥𝗠𝗔𝗟 (𝟮𝘀)", callback_data="speed_normal"),
-                     InlineKeyboardButton("🦥 𝗦𝗟𝗢𝗪 (𝟱𝘀)", callback_data="speed_slow")],
+                    [InlineKeyboardButton("⚡ 𝗨𝗟𝗧𝗥𝗔 (𝟬.𝟭𝘀)", callback_data="speed_ultra"),
+                     InlineKeyboardButton("🚀 𝗙𝗔𝗦𝗧 (𝟬.𝟯𝘀)", callback_data="speed_fast")],
+                    [InlineKeyboardButton("🐢 𝗡𝗢𝗥𝗠𝗔𝗟 (𝟬.𝟱𝘀)", callback_data="speed_normal"),
+                     InlineKeyboardButton("🦥 𝗦𝗟𝗢𝗪 (𝟭𝘀)", callback_data="speed_slow")],
                     [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_count")]
                 ]
-                
                 await update.message.reply_text(
                     f"{self.bi('⚡ 𝗦𝗣𝗘𝗘𝗗')}\n{self.bi('🔢 ' + str(count))}",
-                    reply_markup=InlineKeyboardMarkup(keyboard),
-                    parse_mode=ParseMode.MARKDOWN
+                    reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
                 )
             except ValueError:
-                keyboard = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_types")]]
-                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+                kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
+                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
+    
+    async def show_style_menu_for_message(self, update, user_id):
+        gname = user_states[user_id].get("group_name", "N/A")
+        keyboard = [
+            [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="style_text"),
+             InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="style_bold")],
+            [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="style_italic"),
+             InlineKeyboardButton("𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="style_bold_italic")],
+            [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢", callback_data="style_mono"),
+             InlineKeyboardButton("𝖲 𝗦𝗔𝗡𝗦", callback_data="style_sans")],
+            [InlineKeyboardButton("𝗦𝗕 𝗦𝗔𝗡𝗦 𝗕𝗢𝗟𝗗", callback_data="style_sans_bold"),
+             InlineKeyboardButton("𝘚𝘐 𝘚𝘈𝘕𝘚 𝘐𝘛𝘈𝘓𝘐𝘊", callback_data="style_sans_italic")],
+            [InlineKeyboardButton("𝙎𝘽𝙄 𝙎𝘼𝙉𝙎 𝘽𝙄", callback_data="style_sans_bi"),
+             InlineKeyboardButton("𝐒𝐁 𝐒𝐄𝐑𝐈𝐅 𝐁𝐎𝐋𝐃", callback_data="style_serif_bold")],
+            [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="media_sticker"),
+             InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="media_photo")],
+            [InlineKeyboardButton("🎥 𝗩𝗜𝗗𝗘𝗢", callback_data="media_video"),
+             InlineKeyboardButton("📄 𝗗𝗢𝗖", callback_data="media_document")],
+            [InlineKeyboardButton("🎵 𝗔𝗨𝗗𝗜𝗢", callback_data="media_audio"),
+             InlineKeyboardButton("🎤 𝗩𝗢𝗜𝗖𝗘", callback_data="media_voice")],
+            [InlineKeyboardButton("📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘", callback_data="media_video_note")],
+            [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
+        ]
+        await update.message.reply_text(
+            f"{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘/𝗠𝗘𝗗𝗜𝗔')}\n{self.bi('📌 ' + gname)}",
+            reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
+        )
     
     def parse_chat_id(self, text):
         if not text:
@@ -763,7 +644,7 @@ class PremiumGroupSpamBot:
         chat_id = data.get("chat_id", "")
         gname = data.get("group_name", str(chat_id))
         count = data.get("count", 1)
-        delay = data.get("delay", 1.0)
+        delay = data.get("delay", 0.1)
         msg_type = data.get("msg_type", "text")
         content = data.get("content")
         
@@ -774,11 +655,7 @@ class PremiumGroupSpamBot:
         
         status_msg = await context.bot.send_message(
             chat_id=query.message.chat_id,
-            text=f"""
-{self.bi('🔥 𝗦𝗣𝗔𝗠 𝗦𝗧𝗔𝗥𝗧𝗘𝗗 🔥')}
-{self.bi('📌 ' + gname)}
-{self.bi('🎯 ' + msg_type + ' | 🔢 ' + str(count) + ' | ⚡ ' + str(delay) + 's')}
-""",
+            text=f"{self.bi('🔥 𝗦𝗣𝗔𝗠 𝗦𝗧𝗔𝗥𝗧𝗘𝗗')}\n{self.bi('📌 ' + gname + ' | 🎯 ' + msg_type + ' | 🔢 ' + str(count) + ' | ⚡ ' + str(delay) + 's')}",
             parse_mode=ParseMode.MARKDOWN
         )
         
@@ -787,29 +664,21 @@ class PremiumGroupSpamBot:
         error_msg = None
         sent_message_ids = []
         
+        # Get style function for text types
+        style_func = None
+        text_types = ["text", "bold", "italic", "bold_italic", "mono", "sans", "sans_bold", "sans_italic", "sans_bi", "serif_bold"]
+        if msg_type in text_types and msg_type != "text":
+            style_func = self.get_style_function(msg_type)
+        
         for i in range(count):
             try:
                 sent_msg = None
                 
-                if msg_type == "text":
+                if msg_type in text_types:
                     txt = content.text if content and content.text else "Premium Spam"
+                    if style_func:
+                        txt = style_func(txt)
                     sent_msg = await context.bot.send_message(chat_id=chat_id, text=txt)
-                
-                elif msg_type == "bold":
-                    txt = content.text if content and content.text else "Premium Spam"
-                    sent_msg = await context.bot.send_message(chat_id=chat_id, text=self.make_bold(txt))
-                
-                elif msg_type == "italic":
-                    txt = content.text if content and content.text else "Premium Spam"
-                    sent_msg = await context.bot.send_message(chat_id=chat_id, text=self.make_italic(txt))
-                
-                elif msg_type == "bold_italic":
-                    txt = content.text if content and content.text else "Premium Spam"
-                    sent_msg = await context.bot.send_message(chat_id=chat_id, text=self.make_bold_italic(txt))
-                
-                elif msg_type == "mono":
-                    txt = content.text if content and content.text else "Premium Spam"
-                    sent_msg = await context.bot.send_message(chat_id=chat_id, text=self.make_monospace(txt))
                 
                 elif msg_type == "sticker":
                     if content and content.sticker:
@@ -817,49 +686,42 @@ class PremiumGroupSpamBot:
                     else:
                         failed += 1
                         break
-                
                 elif msg_type == "photo":
                     if content and content.photo:
                         sent_msg = await context.bot.send_photo(chat_id=chat_id, photo=content.photo[-1].file_id, caption=content.caption or "")
                     else:
                         failed += 1
                         break
-                
                 elif msg_type == "video":
                     if content and content.video:
                         sent_msg = await context.bot.send_video(chat_id=chat_id, video=content.video.file_id, caption=content.caption or "")
                     else:
                         failed += 1
                         break
-                
                 elif msg_type == "document":
                     if content and content.document:
                         sent_msg = await context.bot.send_document(chat_id=chat_id, document=content.document.file_id, caption=content.caption or "")
                     else:
                         failed += 1
                         break
-                
                 elif msg_type == "audio":
                     if content and content.audio:
                         sent_msg = await context.bot.send_audio(chat_id=chat_id, audio=content.audio.file_id, caption=content.caption or "")
                     else:
                         failed += 1
                         break
-                
                 elif msg_type == "voice":
                     if content and content.voice:
                         sent_msg = await context.bot.send_voice(chat_id=chat_id, voice=content.voice.file_id, caption=content.caption or "")
                     else:
                         failed += 1
                         break
-                
                 elif msg_type == "video_note":
                     if content and content.video_note:
                         sent_msg = await context.bot.send_video_note(chat_id=chat_id, video_note=content.video_note.file_id)
                     else:
                         failed += 1
                         break
-                
                 else:
                     failed += 1
                     break
@@ -868,7 +730,7 @@ class PremiumGroupSpamBot:
                     sent_message_ids.append(sent_msg.message_id)
                     success += 1
                 
-                if success % 5 == 0:
+                if success % 10 == 0:
                     try:
                         await status_msg.edit_text(
                             f"{self.bi('⚡ ' + str(success) + '/' + str(count))}",
@@ -891,18 +753,11 @@ class PremiumGroupSpamBot:
                 elif "not found" in error_str:
                     error_msg = "Group not found"
                     break
-                else:
-                    error_msg = str(e)[:100]
-                if failed > 2:
+                if failed > 3:
                     break
         
-        # Save sent messages for delete option
         if success > 0:
-            last_spam_messages[user_id] = {
-                "chat_id": chat_id,
-                "message_ids": sent_message_ids,
-                "group_name": gname
-            }
+            last_spam_messages[user_id] = {"chat_id": chat_id, "message_ids": sent_message_ids, "group_name": gname}
         
         try:
             await status_msg.delete()
@@ -913,11 +768,10 @@ class PremiumGroupSpamBot:
 {self.bi('✅ 𝗠𝗜𝗦𝗦𝗜𝗢𝗡 𝗖𝗢𝗠𝗣𝗟𝗘𝗧𝗘𝗗 ✅')}
 {self.bi('━━━━━━━━━━━━━━')}
 {self.bi('📌 ' + gname)}
-{self.bi('✅ ' + str(success) + ' | ❌ ' + str(failed))}
+{self.bi('✅ ' + str(success) + ' | ❌ ' + str(failed) + ' | ⚡ ' + str(delay) + 's')}
 """
         if error_msg and success == 0:
             result += f"{self.bi('⚠ ' + error_msg)}\n"
-        
         result += f"""
 {self.bi('━━━━━━━━━━━━━━')}
 {self.bi('👇 𝗪𝗛𝗔𝗧 𝗡𝗘𝗫𝗧? 👇')}
@@ -926,13 +780,11 @@ class PremiumGroupSpamBot:
         keyboard = [
             [InlineKeyboardButton("🔄 𝗥𝗘𝗦𝗘𝗡𝗗", callback_data="resend_same"),
              InlineKeyboardButton("🆕 𝗡𝗘𝗪", callback_data="new_spam")],
-            [InlineKeyboardButton("🔀 𝗦𝗧𝗬𝗟𝗘", callback_data="change_type")]
+            [InlineKeyboardButton("🎨 𝗖𝗛𝗔𝗡𝗚𝗘 𝗦𝗧𝗬𝗟𝗘", callback_data="change_style")]
         ]
-        
         if success > 0:
             keyboard.append([InlineKeyboardButton("🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗘𝗡𝗧 𝗠𝗦𝗚 🗑", callback_data="delete_last_spam")])
-        
-        keyboard.append([InlineKeyboardButton("🔙 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")])
+        keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")])
         
         await context.bot.send_message(
             chat_id=query.message.chat_id,
@@ -961,12 +813,13 @@ def main():
     ))
     
     print(f"""
-╔══════════════════════════════════════╗
-║   👑 PREMIUM SPAM BOT STARTED 👑   ║
-║   5 TEXT STYLES ACTIVE              ║
-║   DELETE SENT MSG ACTIVE            ║
-║   Owner: @{OWNER_USERNAME}         ║
-╚══════════════════════════════════════╝
+╔══════════════════════════════╗
+║  👑 PREMIUM SPAM BOT 👑    ║
+║  10 TEXT STYLES ACTIVE      ║
+║  0.1s SPEED ACTIVE          ║
+║  DELETE SYSTEM ACTIVE       ║
+║  Owner: @{OWNER_USERNAME}  ║
+╚══════════════════════════════╝
     """)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
