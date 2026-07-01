@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAEwf6UR5F0oFSTqS5KTCmNxIVDyysyx4s8")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAE66qU9Q3vIhkWajjNRyZL6LAqhldIsL_k")
 OWNER_ID = int(os.getenv("OWNER_ID", "7614459746"))
 OWNER_USERNAME = "BeStChEaT_OwNeR"
 API_ID = int(os.getenv("API_ID", "37864401"))
