@@ -1155,14 +1155,11 @@ def main():
         print("BOT_TOKEN not set")
         return
     
-    # Start Telethon in background
-    import threading
-    def run_telethon():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(start_telethon())
-    threading.Thread(target=run_telethon, daemon=True).start()
+    # ✅ Initialize Telethon FIRST
+    global telethon_client
+    telethon_client = TelegramClient('online_session', API_ID, API_HASH)
     
+    # ✅ Bot API app
     app = Application.builder().token(BOT_TOKEN).build()
     bot = PremiumGroupSpamBot()
     
@@ -1177,21 +1174,26 @@ def main():
         bot.message_handler
     ))
     
+    # ✅ Telethon startup function
+    async def start_telethon():
+        try:
+            await telethon_client.start(bot_token=BOT_TOKEN)
+            logger.info("✅ Telethon connected! REAL online count active!")
+        except Exception as e:
+            logger.error(f"❌ Telethon error: {e}")
+    
+    # ✅ Run Telethon startup BEFORE bot polling
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(start_telethon())
+    
     print(f"""
 ╔══════════════════════════════════════╗
-║                                      ║
-║   👑 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑        ║
-║   🔒 𝗣𝗥𝗜𝗩𝗔𝗧𝗘 𝗠𝗢𝗗𝗘 𝗔𝗖𝗧𝗜𝗩𝗘 🔒         ║
-║   𝟭𝟬 𝗧𝗘𝗫𝗧 𝗦𝗧𝗬𝗟𝗘𝗦 𝗔𝗖𝗧𝗜𝗩𝗘            ║
-║   🟢 𝗥𝗘𝗔𝗟 𝗢𝗡𝗟𝗜𝗡𝗘 𝗖𝗢𝗨𝗡𝗧            ║
-║   𝟬.𝟭𝘀 𝗨𝗟𝗧𝗥𝗔 𝗦𝗣𝗘𝗘𝗗 𝗔𝗖𝗧𝗜𝗩𝗘          ║
-║   🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗖𝗧𝗜𝗩𝗘        ║
-║                                      ║
-║   👤 𝗢𝘄𝗻𝗲𝗿: @{OWNER_USERNAME}     ║
-║   🆔 /𝗚𝗲𝘁𝗜𝗱 | 🗑 /𝗱𝗲𝗹𝗲𝘁𝗲𝗮𝗹𝗹       ║
-║                                      ║
+║   👑 PREMIUM SPAM BOT 👑            ║
+║   🟢 REAL ONLINE COUNT ACTIVE       ║
+║   👤 @{OWNER_USERNAME}              ║
 ╚══════════════════════════════════════╝
     """)
+    
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
