@@ -24,8 +24,7 @@ OWNER_USERNAME = "BeStChEaT_OwNeR"
 API_ID = int(os.getenv("API_ID", "37864401"))
 API_HASH = os.getenv("API_HASH", "e7747bfa480eb76256f96976b9dccabc")
 
-# Telethon client for REAL online count
-telethon_client = TelegramClient('online_session', API_ID, API_HASH)
+telethon_client = None
 
 user_states = {}
 saved_groups = {}
@@ -37,23 +36,38 @@ GROUPS_FILE = "saved_groups.json"
 ADMIN_FILE = "admin_list.json"
 CONFIG_FILE = "config.json"
 
-async def get_real_online_count(chat_id):
-    """Get REAL online count using Telethon MTProto API"""
+async def init_telethon():
+    global telethon_client
     try:
-        if not telethon_client.is_connected():
-            await telethon_client.start(bot_token=BOT_TOKEN)
-        
-        chat = await telethon_client.get_entity(chat_id)
-        
-        if hasattr(chat, 'megagroup') and chat.megagroup:
-            full_chat = await telethon_client(GetFullChannelRequest(channel=chat))
-        else:
-            full_chat = await telethon_client(GetFullChatRequest(chat_id=chat_id))
-        
-        online_count = full_chat.full_chat.online_count if hasattr(full_chat.full_chat, 'online_count') else 0
-        return online_count
+        if telethon_client is None:
+            telethon_client = TelegramClient('online_session', API_ID, API_HASH)
+        await telethon_client.start(bot_token=BOT_TOKEN)
+        logger.info("✅ Telethon connected! REAL online count active!")
+        return True
     except Exception as e:
-        logger.error(f"Error getting online count: {e}")
+        logger.error(f"❌ Telethon error: {e}")
+        return False
+
+async def get_real_online_count(chat_id):
+    global telethon_client
+    try:
+        if telethon_client is None:
+            await init_telethon()
+        
+        if telethon_client and telethon_client.is_connected():
+            chat = await telethon_client.get_entity(chat_id)
+            
+            if hasattr(chat, 'megagroup') and chat.megagroup:
+                full_chat = await telethon_client(GetFullChannelRequest(channel=chat))
+            else:
+                full_chat = await telethon_client(GetFullChatRequest(chat_id=chat_id))
+            
+            online_count = full_chat.full_chat.online_count if hasattr(full_chat.full_chat, 'online_count') else 0
+            return online_count
+        else:
+            return "N/A"
+    except Exception as e:
+        logger.error(f"Online count error: {e}")
         return "N/A"
 
 class PremiumGroupSpamBot:
@@ -175,7 +189,6 @@ class PremiumGroupSpamBot:
             if len(desc) > 100:
                 desc = desc[:100] + "..."
             
-            # ✅ GET REAL ONLINE COUNT USING TELETHON
             online = await get_real_online_count(chat_id)
             
             return {
@@ -763,6 +776,13 @@ class PremiumGroupSpamBot:
     
     async def message_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
+        chat_type = update.effective_chat.type
+        
+        # ✅ GROUP/SUPERGROUP MEIN KISI KO REPLY MAT KARO - SIRF DM MEIN KAAM KARO
+        if chat_type in ["group", "supergroup"]:
+            return
+        
+        # ✅ PRIVATE CHAT MEIN UNAUTHORIZED USERS KO BLOCK KARO
         if not self.is_authorized(user_id):
             kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
             await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
@@ -1143,23 +1163,17 @@ class PremiumGroupSpamBot:
         )
 
 async def start_telethon():
-    """Start Telethon client for real online count"""
-    try:
-        await telethon_client.start(bot_token=BOT_TOKEN)
-        logger.info("Telethon client started for REAL online count")
-    except Exception as e:
-        logger.error(f"Failed to start Telethon: {e}")
+    await init_telethon()
 
 def main():
-    if not BOT_TOKEN or BOT_TOKEN == "YOUR_BOT_TOKEN":
-        print("BOT_TOKEN not set")
+    if not BOT_TOKEN:
+        print("❌ BOT_TOKEN not set!")
         return
     
-    # ✅ Initialize Telethon FIRST
-    global telethon_client
-    telethon_client = TelegramClient('online_session', API_ID, API_HASH)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(start_telethon())
     
-    # ✅ Bot API app
     app = Application.builder().token(BOT_TOKEN).build()
     bot = PremiumGroupSpamBot()
     
@@ -1174,26 +1188,21 @@ def main():
         bot.message_handler
     ))
     
-    # ✅ Telethon startup function
-    async def start_telethon():
-        try:
-            await telethon_client.start(bot_token=BOT_TOKEN)
-            logger.info("✅ Telethon connected! REAL online count active!")
-        except Exception as e:
-            logger.error(f"❌ Telethon error: {e}")
-    
-    # ✅ Run Telethon startup BEFORE bot polling
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_telethon())
-    
     print(f"""
 ╔══════════════════════════════════════╗
-║   👑 PREMIUM SPAM BOT 👑            ║
-║   🟢 REAL ONLINE COUNT ACTIVE       ║
-║   👤 @{OWNER_USERNAME}              ║
+║                                      ║
+║   👑 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑        ║
+║   🔒 𝗣𝗥𝗜𝗩𝗔𝗧𝗘 𝗠𝗢𝗗𝗘 𝗔𝗖𝗧𝗜𝗩𝗘 🔒         ║
+║   𝟭𝟬 𝗧𝗘𝗫𝗧 𝗦𝗧𝗬𝗟𝗘𝗦 𝗔𝗖𝗧𝗜𝗩𝗘            ║
+║   🟢 𝗥𝗘𝗔𝗟 𝗢𝗡𝗟𝗜𝗡𝗘 𝗖𝗢𝗨𝗡𝗧            ║
+║   𝟬.𝟭𝘀 𝗨𝗟𝗧𝗥𝗔 𝗦𝗣𝗘𝗘𝗗 𝗔𝗖𝗧𝗜𝗩𝗘          ║
+║   🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗖𝗧𝗜𝗩𝗘        ║
+║                                      ║
+║   👤 𝗢𝘄𝗻𝗲𝗿: @{OWNER_USERNAME}     ║
+║   🆔 /𝗚𝗲𝘁𝗜𝗱 | 🗑 /𝗱𝗲𝗹𝗲𝘁𝗲𝗮𝗹𝗹       ║
+║                                      ║
 ╚══════════════════════════════════════╝
     """)
-    
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
