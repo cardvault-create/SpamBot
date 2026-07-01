@@ -18,11 +18,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAFk46s5GaAAExeJUiEpUYh_-OkRC5h94SQ")
-OWNER_ID = int(os.getenv("OWNER_ID", "7614459746"))
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+OWNER_ID = int(os.getenv("OWNER_ID", ""))
 OWNER_USERNAME = "BeStChEaT_OwNeR"
-API_ID = int(os.getenv("API_ID", "37864401"))
-API_HASH = os.getenv("API_HASH", "e7747bfa480eb76256f96976b9dccabc")
+API_ID = int(os.getenv("API_ID", ""))
+API_HASH = os.getenv("API_HASH", "")
 
 telethon_client = None
 
