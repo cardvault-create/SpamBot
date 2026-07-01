@@ -13,8 +13,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_BOT_TOKEN")
-OWNER_ID = int(os.getenv("OWNER_ID", "123456789"))
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAEwf6UR5F0oFSTqS5KTCmNxIVDyysyx4s8")
+OWNER_ID = int(os.getenv("OWNER_ID", "7614459746"))
 OWNER_USERNAME = "BeStChEaT_OwNeR"
 
 user_states = {}
