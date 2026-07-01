@@ -3,7 +3,6 @@ import asyncio
 import logging
 import json
 import re
-import datetime
 from telethon import TelegramClient, events, Button
 from telethon.tl.functions.messages import GetFullChatRequest
 from telethon.tl.functions.channels import GetFullChannelRequest
@@ -26,6 +25,7 @@ OWNER_USERNAME = "BeStChEaT_OwNeR"
 # Initialize Client
 client = TelegramClient('premium_bot', API_ID, API_HASH)
 
+# Global variables
 user_states = {}
 saved_groups = {}
 admin_list = set()
@@ -80,7 +80,7 @@ class PremiumSpamBot:
     def bi(self, text):
         return f"***{text}***"
     
-    # 10 TEXT STYLES
+    # 10 TEXT STYLES (same as before)
     def style_bold(self, t):
         m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'))
         return ''.join(m.get(c,c) for c in t)
@@ -138,12 +138,9 @@ class PremiumSpamBot:
 """
     
     async def get_chat_info(self, chat_id):
-        """Get REAL group info with EXACT online count"""
         try:
             chat = await client.get_entity(chat_id)
             title = chat.title if hasattr(chat, 'title') else "Unknown"
-            
-            # Get FULL chat info with REAL online count
             online_count = 0
             total_members = 0
             admin_count = 0
@@ -154,16 +151,13 @@ class PremiumSpamBot:
                 else:
                     full_chat = await client(GetFullChatRequest(chat_id=chat_id))
                 
-                # REAL ONLINE COUNT
                 online_count = full_chat.full_chat.online_count if hasattr(full_chat.full_chat, 'online_count') else 0
                 
-                # TOTAL MEMBERS
                 if hasattr(full_chat.full_chat, 'participants_count'):
                     total_members = full_chat.full_chat.participants_count
                 elif hasattr(chat, 'participants_count'):
                     total_members = chat.participants_count
                 
-                # ADMIN COUNT
                 try:
                     admins = await client.get_participants(chat_id, filter=ChannelParticipantsAdmins)
                     admin_count = len(admins)
@@ -173,7 +167,6 @@ class PremiumSpamBot:
                 online_count = 0
                 total_members = 0
             
-            # Description
             desc = ""
             if hasattr(full_chat.full_chat, 'about') and full_chat.full_chat.about:
                 desc = full_chat.full_chat.about[:100]
@@ -225,7 +218,7 @@ async def start_handler(event):
 
 {bot.bi('⭐ 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦 ⭐')}
 {bot.bi('• 𝟭𝟬 𝗨𝗻𝗶𝗾𝘂𝗲 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
-{bot.bi('• 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗠𝗲𝗺𝗯𝗲𝗿𝘀 𝗖𝗼𝘂𝗻𝘁')}
+{bot.bi('• 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗠𝗲𝗺𝗯𝗲𝗿𝘀')}
 {bot.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝗲𝗻𝘁 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
 {bot.bi('• 𝗦𝗮𝘃𝗲𝗱 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝘆𝘀𝘁𝗲𝗺')}
 {bot.bi('• 𝗔𝗱𝗺𝗶𝗻 𝗠𝗮𝗻𝗮𝗴𝗲𝗺𝗲𝗻𝘁')}
@@ -239,7 +232,7 @@ async def start_handler(event):
 """
     await event.reply(msg, buttons=keyboard, parse_mode='markdown')
 
-# 🟢 /GetId COMMAND - WITH REAL ONLINE COUNT
+# 🟢 /GetId COMMAND
 @client.on(events.NewMessage(pattern='/GetId'))
 async def getid_handler(event):
     chat_id = event.chat_id
@@ -251,10 +244,8 @@ async def getid_handler(event):
         )
         return
     
-    # Get REAL info
     info = await bot.get_chat_info(chat_id)
     
-    # Save group
     saved_groups[str(chat_id)] = {
         "name": info["title"],
         "id": str(chat_id),
@@ -281,6 +272,7 @@ async def getid_handler(event):
 # 🟢 BUTTON HANDLER
 @client.on(events.CallbackQuery())
 async def callback_handler(event):
+    global auto_delete_enabled  # ✅ DECLARE AT TOP
     user_id = event.sender_id
     
     if not bot.is_authorized(user_id):
@@ -317,6 +309,12 @@ async def callback_handler(event):
             f"{bot.bi('👑 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}\n\n{bot.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}",
             buttons=keyboard, parse_mode='markdown'
         )
+    
+    elif data == "toggle_auto_delete":
+        auto_delete_enabled = not auto_delete_enabled  # ✅ Direct use, no global needed here
+        bot.save_config()
+        s = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
+        await event.answer(f"𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 {s}", alert=True)
     
     elif data == "saved_groups":
         if not saved_groups:
@@ -369,16 +367,6 @@ async def callback_handler(event):
             buttons=keyboard, parse_mode='markdown'
         )
     
-    elif data.startswith("media_"):
-        mtype = data.replace("media_", "")
-        user_states[user_id]["msg_type"] = mtype
-        user_states[user_id]["step"] = "waiting_for_content"
-        keyboard = [[Button.inline("🔙 𝗕𝗔𝗖𝗞", b"show_styles")]]
-        await event.edit(
-            f"{bot.bi('📤 𝗦𝗲𝗻𝗱 𝘆𝗼𝘂𝗿 𝗺𝗲𝗱𝗶𝗮:')}",
-            buttons=keyboard, parse_mode='markdown'
-        )
-    
     elif data == "show_styles":
         await show_style_menu(event, user_id)
     
@@ -417,13 +405,6 @@ async def callback_handler(event):
             )
             del last_spam_messages[user_id]
     
-    elif data == "toggle_auto_delete":
-        global auto_delete_enabled
-        auto_delete_enabled = not auto_delete_enabled
-        bot.save_config()
-        s = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
-        await event.answer(f"𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 {s}", alert=True)
-    
     elif data == "owner_panel":
         keyboard = [
             [Button.inline("👥 𝗠𝗔𝗡𝗔𝗚𝗘 𝗔𝗗𝗠𝗜𝗡𝗦", b"manage_admins")],
@@ -432,17 +413,6 @@ async def callback_handler(event):
         ]
         await event.edit(
             f"{bot.bi('🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟')}\n{bot.bi('👑 @' + OWNER_USERNAME)}",
-            buttons=keyboard, parse_mode='markdown'
-        )
-    
-    elif data == "manage_admins":
-        if user_id != OWNER_ID:
-            await event.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿!", alert=True)
-            return
-        user_states[user_id] = {"step": "waiting_for_admin_id"}
-        keyboard = [[Button.inline("🔙 𝗕𝗔𝗖𝗞", b"owner_panel")]]
-        await event.edit(
-            f"{bot.bi('👥 𝗦𝗲𝗻𝗱 𝗨𝘀𝗲𝗿 𝗜𝗗 𝘁𝗼 𝗮𝗱𝗱/𝗿𝗲𝗺𝗼𝘃𝗲:')}",
             buttons=keyboard, parse_mode='markdown'
         )
 
@@ -498,23 +468,6 @@ async def message_handler(event):
     
     state = user_states[user_id]
     step = state.get("step")
-    
-    if step == "waiting_for_admin_id":
-        if user_id != OWNER_ID:
-            return
-        try:
-            tid = int(event.message.text.strip())
-            if tid in admin_list:
-                admin_list.remove(tid)
-                bot.save_admins()
-                await event.reply(f"{bot.bi('✅ 𝗥𝗲𝗺𝗼𝘃𝗲𝗱: ' + str(tid))}", parse_mode='markdown')
-            else:
-                admin_list.add(tid)
-                bot.save_admins()
-                await event.reply(f"{bot.bi('✅ 𝗔𝗱𝗱𝗲𝗱: ' + str(tid))}", parse_mode='markdown')
-        except:
-            await event.reply(f"{bot.bi('❌ 𝗜𝗻𝘃𝗮𝗹𝗶𝗱 𝗜𝗗')}", parse_mode='markdown')
-        return
     
     if step == "waiting_for_group":
         text = event.message.text
@@ -710,16 +663,9 @@ async def main():
     await client.start(bot_token=BOT_TOKEN)
     print(f"""
 ╔══════════════════════════════════════╗
-║                                      ║
 ║   👑 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑        ║
-║   🔒 𝗣𝗥𝗜𝗩𝗔𝗧𝗘 𝗠𝗢𝗗𝗘 𝗔𝗖𝗧𝗜𝗩𝗘 🔒         ║
-║   𝟭𝟬 𝗧𝗘𝗫𝗧 𝗦𝗧𝗬𝗟𝗘𝗦 𝗔𝗖𝗧𝗜𝗩𝗘            ║
 ║   🟢 𝗥𝗘𝗔𝗟 𝗢𝗡𝗟𝗜𝗡𝗘 𝗖𝗢𝗨𝗡𝗧            ║
-║   𝟬.𝟭𝘀 𝗨𝗟𝗧𝗥𝗔 𝗦𝗣𝗘𝗘𝗗 𝗔𝗖𝗧𝗜𝗩𝗘          ║
-║   🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗖𝗧𝗜𝗩𝗘        ║
-║                                      ║
-║   👤 𝗢𝘄𝗻𝗲𝗿: @{OWNER_USERNAME}     ║
-║                                      ║
+║   👤 @{OWNER_USERNAME}              ║
 ╚══════════════════════════════════════╝
     """)
     await client.run_until_disconnected()
