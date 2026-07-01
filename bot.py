@@ -888,7 +888,7 @@ class PremiumGroupSpamBot:
         if data == "show_styles":
             await self.show_style_menu(query, user_id)
             return
-        if data == "show_count":
+                if data == "show_count":
             user_states[user_id]["step"] = "waiting_for_count"
             kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
             await query.edit_message_text(
@@ -906,7 +906,8 @@ class PremiumGroupSpamBot:
             speed_map = {"speed_ultra": 0.1, "speed_fast": 0.3, "speed_normal": 0.5, "speed_slow": 1}
             user_states[user_id]["delay"] = speed_map.get(data, 0.1)
             await self.execute_spam(query, user_id, context)
-            return        if data == "resend_same":
+            return
+        if data == "resend_same":
             if user_id in user_states and "chat_id" in user_states[user_id]:
                 await self.execute_spam(query, user_id, context)
             return
