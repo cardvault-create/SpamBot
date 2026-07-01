@@ -18,11 +18,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-OWNER_ID = int(os.getenv("OWNER_ID", ""))
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAFk46s5GaAAExeJUiEpUYh_-OkRC5h94SQ")
+OWNER_ID = int(os.getenv("OWNER_ID", "7614459746"))
 OWNER_USERNAME = "BeStChEaT_OwNeR"
-API_ID = int(os.getenv("API_ID", ""))
-API_HASH = os.getenv("API_HASH", "")
+API_ID = int(os.getenv("API_ID", "37864401"))
+API_HASH = os.getenv("API_HASH", "e7747bfa480eb76256f96976b9dccabc")
 
 telethon_client = None
 
@@ -182,7 +182,7 @@ class PremiumGroupSpamBot:
         return ''.join(m.get(c,c) for c in t)
     
     def style_sans_bi(self, t):
-        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙙𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
         return ''.join(m.get(c,c) for c in t)
     
     def style_serif_bold(self, t):
@@ -904,7 +904,7 @@ class PremiumGroupSpamBot:
             return
         if data.startswith("speed_"):
             speed_map = {"speed_ultra": 0.1, "speed_fast": 0.3, "speed_normal": 0.5, "speed_slow": 1}
-            user_states[user_id]["delay"] = speed_map.get(data, 0.1)
+            user_states[user_id]["delay"] = speed_map.get(data, 0.5)  # ✅ DEFAULT 0.5s for safety
             await self.execute_spam(query, user_id, context)
             return
         if data == "resend_same":
@@ -962,6 +962,7 @@ class PremiumGroupSpamBot:
         user_id = update.effective_user.id
         chat_type = update.effective_chat.type
         
+        # ✅ GROUP MESSAGES COMPLETELY IGNORE - NO REPLY
         if chat_type in ["group", "supergroup"]:
             return
         
@@ -1161,7 +1162,7 @@ class PremiumGroupSpamBot:
         chat_id = data.get("chat_id", "")
         gname = data.get("group_name", str(chat_id))
         count = data.get("count", 1)
-        delay = data.get("delay", 0.1)
+        delay = data.get("delay", 0.5)  # ✅ DEFAULT 0.5s
         msg_type = data.get("msg_type", "text")
         content = data.get("content")
         
@@ -1199,6 +1200,9 @@ class PremiumGroupSpamBot:
         if msg_type in text_types and msg_type != "text":
             style_func = self.get_style_function(msg_type)
         
+        # ✅ FLOOD HANDLING - Continue on flood, max 10 retries
+        consecutive_fails = 0
+        
         for i in range(count):
             if not active_spam_tasks.get(user_id, False):
                 break
@@ -1217,58 +1221,51 @@ class PremiumGroupSpamBot:
                         sent_msg = await context.bot.send_sticker(chat_id=chat_id, sticker=content.sticker.file_id)
                     else:
                         failed += 1
-                        error_msg = "No sticker found"
                         break
                 elif msg_type == "photo":
                     if content and content.photo:
                         sent_msg = await context.bot.send_photo(chat_id=chat_id, photo=content.photo[-1].file_id, caption=content.caption or "")
                     else:
                         failed += 1
-                        error_msg = "No photo found"
                         break
                 elif msg_type == "video":
                     if content and content.video:
                         sent_msg = await context.bot.send_video(chat_id=chat_id, video=content.video.file_id, caption=content.caption or "")
                     else:
                         failed += 1
-                        error_msg = "No video found"
                         break
                 elif msg_type == "document":
                     if content and content.document:
                         sent_msg = await context.bot.send_document(chat_id=chat_id, document=content.document.file_id, caption=content.caption or "")
                     else:
                         failed += 1
-                        error_msg = "No document found"
                         break
                 elif msg_type == "audio":
                     if content and content.audio:
                         sent_msg = await context.bot.send_audio(chat_id=chat_id, audio=content.audio.file_id, caption=content.caption or "")
                     else:
                         failed += 1
-                        error_msg = "No audio found"
                         break
                 elif msg_type == "voice":
                     if content and content.voice:
                         sent_msg = await context.bot.send_voice(chat_id=chat_id, voice=content.voice.file_id, caption=content.caption or "")
                     else:
                         failed += 1
-                        error_msg = "No voice found"
                         break
                 elif msg_type == "video_note":
                     if content and content.video_note:
                         sent_msg = await context.bot.send_video_note(chat_id=chat_id, video_note=content.video_note.file_id)
                     else:
                         failed += 1
-                        error_msg = "No video note found"
                         break
                 else:
                     failed += 1
-                    error_msg = "Unknown type"
                     break
                 
                 if sent_msg:
                     sent_message_ids.append(sent_msg.message_id)
                     success += 1
+                    consecutive_fails = 0  # ✅ Reset fail counter on success
                     
                     if auto_delete_enabled:
                         asyncio.create_task(self.auto_delete_msg_after(context, chat_id, sent_msg.message_id, 24))
@@ -1293,7 +1290,22 @@ class PremiumGroupSpamBot:
                 
             except Exception as e:
                 failed += 1
+                consecutive_fails += 1
                 error_str = str(e).lower()
+                
+                # ✅ FLOOD HANDLING
+                if "flood" in error_str or "too many" in error_str or "retry after" in error_str:
+                    wait_time = 5
+                    try:
+                        # Extract wait time from error if available
+                        if "retry after" in error_str:
+                            wait_time = int(''.join(filter(str.isdigit, error_str.split("retry after")[1]))) + 1
+                    except:
+                        pass
+                    logger.warning(f"Flood wait: {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                    continue  # ✅ Retry after waiting
+                
                 if "not enough rights" in error_str:
                     error_msg = f"Need ADMIN with send permission"
                     break
@@ -1303,10 +1315,8 @@ class PremiumGroupSpamBot:
                 elif "not found" in error_str:
                     error_msg = "Group not found"
                     break
-                elif "message to forward" in error_str:
-                    error_msg = "Content error. Send again."
-                    break
-                if failed > 3:
+                
+                if consecutive_fails > 5:  # ✅ Stop after 5 consecutive fails
                     break
         
         if user_id in active_spam_tasks:
@@ -1397,7 +1407,7 @@ def main():
 ║   🔒 𝗣𝗥𝗜𝗩𝗔𝗧𝗘 𝗠𝗢𝗗𝗘 𝗔𝗖𝗧𝗜𝗩𝗘 🔒         ║
 ║   𝟭𝟬 𝗧𝗘𝗫𝗧 𝗦𝗧𝗬𝗟𝗘𝗦 𝗔𝗖𝗧𝗜𝗩𝗘            ║
 ║   🟢 𝗥𝗘𝗔𝗟 𝗢𝗡𝗟𝗜𝗡𝗘 𝗖𝗢𝗨𝗡𝗧            ║
-║   𝟬.𝟭𝘀 𝗨𝗟𝗧𝗥𝗔 𝗦𝗣𝗘𝗘𝗗 𝗔𝗖𝗧𝗜𝗩𝗘          ║
+║   𝟬.𝟱𝘀 𝗗𝗘𝗙𝗔𝗨𝗟𝗧 𝗦𝗣𝗘𝗘𝗗            ║
 ║   🛑 𝗦𝗧𝗢𝗣 𝗕𝗨𝗧𝗧𝗢𝗡 𝗔𝗖𝗧𝗜𝗩𝗘           ║
 ║   𝟭-𝟭𝟬𝟬 𝗖𝗨𝗦𝗧𝗢𝗠 𝗥𝗔𝗡𝗚𝗘             ║
 ║   🗑 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘 𝟮𝟰𝗛 𝗔𝗖𝗧𝗜𝗩𝗘      ║
