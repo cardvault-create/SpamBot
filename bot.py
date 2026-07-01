@@ -33,11 +33,13 @@ admin_list = set()
 auto_delete_enabled = True
 last_spam_messages = {}
 active_spam_tasks = {}
+auto_delete_tasks = {}  # ✅ Track auto-delete tasks per group
 
 GROUPS_FILE = "saved_groups.json"
 ADMIN_FILE = "admin_list.json"
 CONFIG_FILE = "config.json"
 ADMIN_GROUPS_FILE = "admin_groups.json"
+AUTO_DELETE_FILE = "auto_delete_tasks.json"
 
 async def init_telethon():
     global telethon_client
@@ -80,7 +82,7 @@ class PremiumGroupSpamBot:
         self.load_data()
     
     def load_data(self):
-        global saved_groups, admin_list, auto_delete_enabled, admin_groups
+        global saved_groups, admin_list, auto_delete_enabled, admin_groups, auto_delete_tasks
         try:
             with open(GROUPS_FILE, 'r') as f:
                 saved_groups = json.load(f)
@@ -103,6 +105,11 @@ class PremiumGroupSpamBot:
                 admin_groups = json.load(f)
         except:
             admin_groups = {}
+        try:
+            with open(AUTO_DELETE_FILE, 'r') as f:
+                auto_delete_tasks = json.load(f)
+        except:
+            auto_delete_tasks = {}
     
     def save_groups(self):
         with open(GROUPS_FILE, 'w') as f:
@@ -119,6 +126,10 @@ class PremiumGroupSpamBot:
     def save_admin_groups(self):
         with open(ADMIN_GROUPS_FILE, 'w') as f:
             json.dump(admin_groups, f)
+    
+    def save_auto_delete_tasks(self):
+        with open(AUTO_DELETE_FILE, 'w') as f:
+            json.dump(auto_delete_tasks, f)
     
     def is_authorized(self, user_id):
         return user_id == self.owner_id or user_id in admin_list
@@ -141,6 +152,7 @@ class PremiumGroupSpamBot:
     def bi(self, text):
         return f"***{text}***"
     
+    # 10 TEXT STYLES
     def style_bold(self, t):
         m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'))
         return ''.join(m.get(c,c) for c in t)
@@ -170,7 +182,7 @@ class PremiumGroupSpamBot:
         return ''.join(m.get(c,c) for c in t)
     
     def style_sans_bi(self, t):
-        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
+        m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ','𝙖𝙗𝙙𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'))
         return ''.join(m.get(c,c) for c in t)
     
     def style_serif_bold(self, t):
@@ -224,6 +236,30 @@ class PremiumGroupSpamBot:
         except:
             return {"title": str(chat_id), "type": "Unknown", "members": 0, "admins": 0, "desc": "N/A", "online": "N/A"}
     
+    async def auto_delete_msg_after(self, context, chat_id, message_id, hours=24):
+        """Auto delete message after specified hours"""
+        try:
+            seconds = hours * 3600
+            await asyncio.sleep(seconds)
+            try:
+                await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+                logger.info(f"Auto-deleted message {message_id} from {chat_id} after {hours}h")
+            except:
+                pass
+        except:
+            pass
+    
+    async def schedule_auto_delete_group(self, context, chat_id, hours=24):
+        """Schedule auto-delete for all future bot messages in a group"""
+        task_key = str(chat_id)
+        auto_delete_tasks[task_key] = {
+            "enabled": True,
+            "hours": hours,
+            "added_at": datetime.datetime.now().isoformat()
+        }
+        self.save_auto_delete_tasks()
+        logger.info(f"Auto-delete scheduled for group {chat_id} every {hours}h")
+    
     async def show_main_menu(self, query):
         user_id = query.from_user.id
         if not self.is_authorized(user_id):
@@ -233,7 +269,7 @@ class PremiumGroupSpamBot:
         if user_id in user_states:
             del user_states[user_id]
         
-        auto_status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
+        auto_status = "✅ 𝗢𝗡 (𝟮𝟰𝗛)" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
         
         if user_id == self.owner_id:
             keyboard = [
@@ -252,17 +288,14 @@ class PremiumGroupSpamBot:
 {self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗖𝗞 𝗠𝗔𝗦𝗧𝗘𝗥 💎')}
 {self.bi('⭐ 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦 ⭐')}
 {self.bi('• 𝟭𝟬 𝗨𝗻𝗶𝗾𝘂𝗲 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
-{self.bi('• 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗠𝗲𝗺𝗯𝗲𝗿𝘀 𝗖𝗼𝘂𝗻𝘁')}
-{self.bi('• 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 𝘁𝗼 𝗛𝗮𝗹𝘁 𝗦𝗽𝗮𝗺')}
-{self.bi('• 𝟭-𝟭𝟬𝟬 𝗖𝘂𝘀𝘁𝗼𝗺 𝗠𝗲𝘀𝘀𝗮𝗴𝗲 𝗥𝗮𝗻𝗴𝗲')}
+{self.bi('• 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗠𝗲𝗺𝗯𝗲𝗿𝘀')}
+{self.bi('• 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 𝘁𝗼 𝗛𝗮𝗹𝘁')}
+{self.bi('• 𝟭-𝟭𝟬𝟬 𝗖𝘂𝘀𝘁𝗼𝗺 𝗥𝗮𝗻𝗴𝗲')}
+{self.bi('• 🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝟮𝟰𝗛')}
 {self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝗲𝗻𝘁 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
 {self.bi('• 𝗦𝗮𝘃𝗲𝗱 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝘆𝘀𝘁𝗲𝗺')}
 {self.bi('• 𝗔𝗱𝗺𝗶𝗻 𝗠𝗮𝗻𝗮𝗴𝗲𝗺𝗲𝗻𝘁')}
-{self.bi('• 𝗨𝗹𝘁𝗿𝗮 𝗙𝗮𝘀𝘁 𝟬.𝟭𝘀 𝗦𝗽𝗲𝗲𝗱')}
-{self.bi('🔒 𝗦𝗧𝗔𝗧𝗨𝗦: 𝗣𝗿𝗶𝘃𝗮𝘁𝗲 𝗠𝗼𝗱𝗲')}
-{self.bi('👑 𝗔𝗖𝗖𝗘𝗦𝗦: 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘇𝗲𝗱 𝗢𝗻𝗹𝘆')}
-{self.bi('💎 𝗣𝗟𝗔𝗡: 𝗘𝘅𝗰𝗹𝘂𝘀𝗶𝘃𝗲 𝗣𝗿𝗲𝗺𝗶𝘂𝗺')}
-{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 𝗕𝗘𝗟𝗢𝗪 📌')}
+{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
 """
         else:
             keyboard = [
@@ -295,7 +328,7 @@ class PremiumGroupSpamBot:
         if user_id in user_states:
             del user_states[user_id]
         
-        auto_status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
+        auto_status = "✅ 𝗢𝗡 (𝟮𝟰𝗛)" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
         
         if user_id == self.owner_id:
             keyboard = [
@@ -312,8 +345,8 @@ class PremiumGroupSpamBot:
             msg = f"""
 {self.bi('👑 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
 {self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗖𝗞 𝗠𝗔𝗦𝗧𝗘𝗥 💎')}
-{self.bi('⭐ 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀 | 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲')}
-{self.bi('⭐ 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 | 𝟭-𝟭𝟬𝟬 𝗥𝗮𝗻𝗴𝗲')}
+{self.bi('⭐ 𝟭𝟬 𝗦𝘁𝘆𝗹𝗲𝘀 | 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲')}
+{self.bi('⭐ 🛑 𝗦𝗧𝗢𝗣 | 𝟭-𝟭𝟬𝟬 | 🗑 𝟮𝟰𝗛 𝗔𝘂𝘁𝗼')}
 {self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
 """
         else:
@@ -361,7 +394,7 @@ class PremiumGroupSpamBot:
 {self.bi('👑 𝗔𝗱𝗺𝗶𝗻𝘀: ' + str(admins))}
 {self.bi('📝 𝗗𝗲𝘀𝗰: ' + str(desc))}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('✅ 𝗚𝗿𝗼𝘂𝗽 𝗔𝘂𝘁𝗼-𝗦𝗮𝘃𝗲𝗱 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆')}
+{self.bi('✅ 𝗚𝗿𝗼𝘂𝗽 𝗔𝘂𝘁𝗼-𝗦𝗮𝘃𝗲𝗱')}
 """
         await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
     
@@ -378,11 +411,9 @@ class PremiumGroupSpamBot:
 {self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗔𝗟𝗟 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦 🗑')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
 {self.bi('📌 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗 𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲')}
-{self.bi('⚠ 𝗕𝗼𝘁 𝗠𝘂𝘀𝘁 𝗕𝗲 𝗔𝗗𝗠𝗜𝗡 𝗜𝗻 𝗚𝗿𝗼𝘂𝗽')}
-{self.bi('💡 𝗖𝗮𝗻 𝗗𝗲𝗹𝗲𝘁𝗲 𝗥𝗲𝗰𝗲𝗻𝘁 𝟮𝟬𝟬 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
+{self.bi('⚠ 𝗕𝗼𝘁 𝗠𝘂𝘀𝘁 𝗕𝗲 𝗔𝗗𝗠𝗜𝗡')}
 """,
-            reply_markup=InlineKeyboardMarkup(kb),
-            parse_mode=ParseMode.MARKDOWN
+            reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
         )
     
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -397,23 +428,20 @@ class PremiumGroupSpamBot:
         
         data = query.data
         
-        # ✅ STOP SPAM BUTTON
+        # ✅ STOP SPAM
         if data == "stop_spam":
             if user_id in active_spam_tasks:
                 active_spam_tasks[user_id] = False
-                await query.answer("🛑 𝗦𝗽𝗮𝗺 𝗦𝘁𝗼𝗽𝗽𝗲𝗱 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆!", show_alert=True)
+                await query.answer("🛑 𝗦𝗽𝗮𝗺 𝗦𝘁𝗼𝗽𝗽𝗲𝗱!", show_alert=True)
                 try:
-                    await query.edit_message_text(
-                        f"{self.bi('🛑 𝗦𝗣𝗔𝗠 𝗦𝗧𝗢𝗣𝗣𝗘𝗗 🛑')}\n{self.bi('✅ 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗵𝗮𝗹𝘁𝗲𝗱 𝗯𝘆 𝘂𝘀𝗲𝗿')}",
-                        parse_mode=ParseMode.MARKDOWN
-                    )
+                    await query.edit_message_text(f"{self.bi('🛑 𝗦𝗣𝗔𝗠 𝗦𝗧𝗢𝗣𝗣𝗘𝗗 🛑')}", parse_mode=ParseMode.MARKDOWN)
                 except:
                     pass
             else:
-                await query.answer("𝗡𝗼 𝗮𝗰𝘁𝗶𝘃𝗲 𝘀𝗽𝗮𝗺 𝘁𝗼 𝘀𝘁𝗼𝗽!", show_alert=True)
+                await query.answer("𝗡𝗼 𝗮𝗰𝘁𝗶𝘃𝗲 𝘀𝗽𝗮𝗺!", show_alert=True)
             return
         
-        # ✅ RESTRICTED BUTTONS - ONLY OWNER
+        # ✅ RESTRICTED - OWNER ONLY
         owner_only = ["get_id_info", "my_stats", "owner_panel", "delete_all_group", "manage_admins", "toggle_auto_delete", "clear_groups"]
         if data in owner_only and user_id != self.owner_id:
             await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿 𝗰𝗮𝗻 𝗮𝗰𝗰𝗲𝘀𝘀 𝘁𝗵𝗶𝘀!", show_alert=True)
@@ -426,17 +454,14 @@ class PremiumGroupSpamBot:
             global auto_delete_enabled
             auto_delete_enabled = not auto_delete_enabled
             self.save_config()
-            s = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
+            s = "✅ 𝗢𝗡 (𝟮𝟰𝗛)" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
             await query.answer(f"𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 {s}", show_alert=True)
             await self.show_main_menu(query)
             return
         if data == "delete_last_spam":
             if user_id in last_spam_messages:
                 sd = last_spam_messages[user_id]
-                await query.edit_message_text(
-                    f"{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗶𝗻𝗴 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀...')}",
-                    parse_mode=ParseMode.MARKDOWN
-                )
+                await query.edit_message_text(f"{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗶𝗻𝗴...')}", parse_mode=ParseMode.MARKDOWN)
                 deleted = 0
                 for mid in sd.get("message_ids", []):
                     try:
@@ -447,50 +472,20 @@ class PremiumGroupSpamBot:
                         pass
                 kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
                 await query.edit_message_text(
-                    f"""
-{self.bi('✅ 𝗗𝗘𝗟𝗘𝗧𝗘 𝗖𝗢𝗠𝗣𝗟𝗘𝗧𝗘𝗗 ✅')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + '/' + str(len(sd.get('message_ids',[]))))}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + sd.get('group_name',''))}
-""",
-                    reply_markup=InlineKeyboardMarkup(kb),
-                    parse_mode=ParseMode.MARKDOWN
+                    f"{self.bi('✅ 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + '/' + str(len(sd.get('message_ids',[]))))}",
+                    reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
                 )
                 del last_spam_messages[user_id]
             else:
-                await query.answer("𝗡𝗼 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝘁𝗼 𝗱𝗲𝗹𝗲𝘁𝗲!", show_alert=True)
-            return
-        if data == "get_id_info":
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
-            await query.edit_message_text(
-                f"""
-{self.bi('🆔 𝗛𝗢𝗪 𝗧𝗢 𝗚𝗘𝗧 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 🆔')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗦𝘁𝗲𝗽 𝟭:')}
-{self.bi('𝗔𝗱𝗱 𝗕𝗼𝘁 𝗧𝗼 𝗚𝗿𝗼𝘂𝗽 𝗔𝘀 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('📌 𝗦𝘁𝗲𝗽 𝟮:')}
-{self.bi('𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗜𝗻 𝗧𝗵𝗲 𝗚𝗿𝗼𝘂𝗽')}
-{self.bi('📌 𝗦𝘁𝗲𝗽 𝟯:')}
-{self.bi('𝗕𝗼𝘁 𝗪𝗶𝗹𝗹 𝗦𝗵𝗼𝘄 𝗙𝘂𝗹𝗹 𝗜𝗻𝗳𝗼')}
-{self.bi('✅ 𝗚𝗿𝗼𝘂𝗽 𝗔𝘂𝘁𝗼-𝗦𝗮𝘃𝗲𝗱')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+                await query.answer("𝗡𝗼 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀!", show_alert=True)
             return
         if data == "saved_groups_menu":
             user_groups = self.get_user_groups(user_id)
             if not user_groups:
-                kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
+                kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
                 await query.edit_message_text(
-                    f"""
-{self.bi('📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 📋')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('❌ 𝗡𝗼 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝗮𝘃𝗲𝗱 𝗬𝗲𝘁')}
-{self.bi('💡 𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗜𝗻 𝗚𝗿𝗼𝘂𝗽')}
-""",
-                    reply_markup=InlineKeyboardMarkup(kb),
-                    parse_mode=ParseMode.MARKDOWN
+                    f"{self.bi('📋 𝗡𝗼 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝗮𝘃𝗲𝗱')}\n{self.bi('𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗶𝗻 𝗴𝗿𝗼𝘂𝗽')}",
+                    reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
                 )
                 return
             keyboard = []
@@ -498,18 +493,11 @@ class PremiumGroupSpamBot:
                 name = ginfo.get("name", gid)[:30]
                 keyboard.append([InlineKeyboardButton(f"📌 {name}", callback_data=f"sg_{gid}")])
             if user_id == self.owner_id:
-                keyboard.append([InlineKeyboardButton("🗑 𝗖𝗟𝗘𝗔𝗥 𝗔𝗟𝗟 𝗚𝗥𝗢𝗨𝗣𝗦", callback_data="clear_groups")])
-            keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")])
+                keyboard.append([InlineKeyboardButton("🗑 𝗖𝗟𝗘𝗔𝗥 𝗔𝗟𝗟", callback_data="clear_groups")])
+            keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")])
             await query.edit_message_text(
-                f"""
-{self.bi('📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 𝗟𝗜𝗦𝗧 📋')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗧𝗼𝘁𝗮𝗹: ' + str(len(user_groups)) + ' 𝗚𝗿𝗼𝘂𝗽𝘀')}
-
-{self.bi('👇 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔 𝗚𝗥𝗢𝗨𝗣 𝗧𝗢 𝗦𝗣𝗔𝗠 👇')}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('📋 𝗚𝗥𝗢𝗨𝗣𝗦 (' + str(len(user_groups)) + ')')}\n{self.bi('👇 𝗦𝗘𝗟𝗘𝗖𝗧')}",
+                reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
             )
             return
         if data.startswith("sg_"):
@@ -526,130 +514,97 @@ class PremiumGroupSpamBot:
             return
         if data == "clear_groups":
             self.save_user_groups(user_id, {})
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
-            await query.edit_message_text(
-                f"""
-{self.bi('🗑 𝗚𝗥𝗢𝗨𝗣𝗦 𝗖𝗟𝗘𝗔𝗥𝗘𝗗 🗑')}
-{self.bi('✅ 𝗔𝗹𝗹 𝗦𝗮𝘃𝗲𝗱 𝗚𝗿𝗼𝘂𝗽𝘀 𝗗𝗲𝗹𝗲𝘁𝗲𝗱')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            await query.edit_message_text(f"{self.bi('🗑 𝗖𝗟𝗘𝗔𝗥𝗘𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data == "add_group_manual":
             user_states[user_id] = {"step": "waiting_for_group_manual"}
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
-            await query.edit_message_text(
-                f"""
-{self.bi('➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 𝗠𝗔𝗡𝗨𝗔𝗟𝗟𝗬 ➕')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗 𝗼𝗿 @𝘂𝘀𝗲𝗿𝗻𝗮𝗺𝗲')}
-{self.bi('📌 𝗙𝗼𝗿𝗺𝗮𝘁: -𝟭𝟬𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵𝟬')}
-{self.bi('📌 𝗢𝗿: @𝗴𝗿𝗼𝘂𝗽𝘂𝘀𝗲𝗿𝗻𝗮𝗺𝗲')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            await query.edit_message_text(f"{self.bi('➕ 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data == "start_spam":
             user_states[user_id] = {"step": "waiting_for_group"}
-            kb = [
-                [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦", callback_data="saved_groups_menu")],
-                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
-            ]
-            await query.edit_message_text(
-                f"""
-{self.bi('🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗 𝗼𝗿 @𝘂𝘀𝗲𝗿𝗻𝗮𝗺𝗲')}
-{self.bi('📌 𝗙𝗼𝗿𝗺𝗮𝘁: -𝟭𝟬𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵𝟬')}
-{self.bi('📌 𝗢𝗿 𝗦𝗲𝗹𝗲𝗰𝘁 𝗙𝗿𝗼𝗺 𝗦𝗮𝘃𝗲𝗱')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
-            return
-        if data == "my_stats":
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
-            await query.edit_message_text(
-                f"""
-{self.bi('📊 𝗢𝗪𝗡𝗘𝗥 𝗦𝗧𝗔𝗧𝗜𝗦𝗧𝗜𝗖𝗦 📊')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('👑 𝗦𝘁𝗮𝘁𝘂𝘀: 𝗔𝗰𝘁𝗶𝘃𝗲 & 𝗢𝗻𝗹𝗶𝗻𝗲')}
-{self.bi('💎 𝗣𝗹𝗮𝗻: 𝗘𝘅𝗰𝗹𝘂𝘀𝗶𝘃𝗲 𝗣𝗿𝗲𝗺𝗶𝘂𝗺')}
-{self.bi('🔒 𝗔𝗰𝗰𝗲𝘀𝘀: 𝗣𝗿𝗶𝘃𝗮𝘁𝗲 𝗠𝗼𝗱𝗲')}
-{self.bi('♾ 𝗟𝗶𝗺𝗶𝘁𝘀: 𝗨𝗻𝗹𝗶𝗺𝗶𝘁𝗲𝗱')}
-{self.bi('⚡ 𝗦𝗽𝗲𝗲𝗱: 𝟬.𝟭𝘀 𝗨𝗹𝘁𝗿𝗮')}
-{self.bi('📋 𝗚𝗿𝗼𝘂𝗽𝘀: ' + str(len(saved_groups)))}
-{self.bi('👥 𝗔𝗱𝗺𝗶𝗻𝘀: ' + str(len(admin_list)))}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            kb = [[InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗", callback_data="saved_groups_menu")], [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+            await query.edit_message_text(f"{self.bi('🔥 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data == "help_menu":
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
             await query.edit_message_text(
                 f"""
 {self.bi('❓ 𝗛𝗢𝗪 𝗧𝗢 𝗨𝗦𝗘 ❓')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-
-{self.bi('📌 𝗦𝗧𝗘𝗣 𝟭:')}
-{self.bi('𝗔𝗱𝗱 𝗕𝗼𝘁 𝗧𝗼 𝗚𝗿𝗼𝘂𝗽 𝗔𝘀 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('𝗚𝗶𝘃𝗲 𝗔𝗹𝗹 𝗣𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻𝘀')}
-
-{self.bi('📌 𝗦𝗧𝗘𝗣 𝟮:')}
-{self.bi('𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗜𝗻 𝗚𝗿𝗼𝘂𝗽')}
-{self.bi('𝗚𝗲𝘁 𝗙𝘂𝗹𝗹 𝗚𝗿𝗼𝘂𝗽 𝗜𝗻𝗳𝗼')}
-
-{self.bi('📌 𝗦𝗧𝗘𝗣 𝟯:')}
-{self.bi('𝗖𝗹𝗶𝗰𝗸 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚')}
-{self.bi('𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗')}
-
-{self.bi('📌 𝗦𝗧𝗘𝗣 𝟰:')}
-{self.bi('𝗦𝗲𝗹𝗲𝗰𝘁 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
-{self.bi('𝗢𝗿 𝗠𝗲𝗱𝗶𝗮 𝗧𝘆𝗽𝗲𝘀')}
-
-{self.bi('📌 𝗦𝗧𝗘𝗣 𝟱:')}
-{self.bi('𝗦𝗲𝗻𝗱 𝗰𝗼𝘂𝗻𝘁 (𝟭-𝟭𝟬𝟬)')}
-{self.bi('𝗖𝗹𝗶𝗰𝗸 🛑 𝗦𝗧𝗢𝗣 𝘁𝗼 𝗵𝗮𝗹𝘁')}
-
-{self.bi('🗑 /𝗱𝗲𝗹𝗲𝘁𝗲𝗮𝗹𝗹 𝗧𝗼 𝗗𝗲𝗹𝗲𝘁𝗲')}
+{self.bi('📌 𝟭️ 𝗔𝗱𝗱 𝗕𝗼𝘁 𝗔𝘀 𝗔𝗗𝗠𝗜𝗡')}
+{self.bi('📌 𝟮️ 𝗦𝗲𝗻𝗱 /𝗚𝗲𝘁𝗜𝗱 𝗜𝗻 𝗚𝗿𝗼𝘂𝗽')}
+{self.bi('📌 𝟯️ 𝗦𝘁𝗮𝗿𝘁 𝗦𝗽𝗮𝗺𝗺𝗶𝗻𝗴')}
+{self.bi('📌 𝟰️ 𝗦𝗲𝗹𝗲𝗰𝘁 𝗦𝘁𝘆𝗹𝗲 & 𝗦𝗲𝗻𝗱')}
+{self.bi('📌 𝟱️ 𝗦𝗲𝘁 𝗖𝗼𝘂𝗻𝘁 (𝟭-𝟭𝟬𝟬)')}
+{self.bi('📌 𝟲️ 𝗖𝗵𝗼𝗼𝘀𝗲 𝗦𝗽𝗲𝗲𝗱')}
+{self.bi('🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 𝘁𝗼 𝗛𝗮𝗹𝘁')}
+{self.bi('🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝟮𝟰𝗛 𝗔𝗰𝘁𝗶𝘃𝗲')}
 """,
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
         if data == "owner_panel":
             kb = [
-                [InlineKeyboardButton("👥 𝗠𝗔𝗡𝗔𝗚𝗘 𝗔𝗗𝗠𝗜𝗡𝗦 👥", callback_data="manage_admins")],
-                [InlineKeyboardButton("🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗔𝗟𝗟 𝗚𝗥𝗢𝗨𝗣 𝗠𝗦𝗚 🗑", callback_data="delete_all_group")],
-                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
+                [InlineKeyboardButton("👥 𝗠𝗔𝗡𝗔𝗚𝗘 𝗔𝗗𝗠𝗜𝗡𝗦", callback_data="manage_admins")],
+                [InlineKeyboardButton("🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗔𝗟𝗟 𝗠𝗦𝗚", callback_data="delete_all_group")],
+                [InlineKeyboardButton("⏰ 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟 𝟮𝟰𝗛 𝗦𝗘𝗧", callback_data="auto_delete_24h")],
+                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
+            ]
+            await query.edit_message_text(
+                f"{self.bi('🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟')}\n{self.bi('👑 @' + self.owner_username)}\n{self.bi('🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹: ' + ('✅ 𝟮𝟰𝗛' if auto_delete_enabled else '❌ 𝗢𝗙𝗙'))}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
+            )
+            return
+        if data == "auto_delete_24h":
+            if user_id != self.owner_id:
+                await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿!", show_alert=True)
+                return
+            keyboard = [
+                [InlineKeyboardButton("✅ 𝗘𝗡𝗔𝗕𝗟𝗘 𝟮𝟰𝗛 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟", callback_data="enable_auto_24")],
+                [InlineKeyboardButton("❌ 𝗗𝗜𝗦𝗔𝗕𝗟𝗘 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟", callback_data="disable_auto_del")],
+                [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]
             ]
             await query.edit_message_text(
                 f"""
-{self.bi('🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐')}
+{self.bi('⏰ 𝟮𝟰 𝗛𝗢𝗨𝗥 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘 ⏰')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('👑 𝗢𝘄𝗻𝗲𝗿 𝗜𝗗: ' + str(self.owner_id))}
-{self.bi('📌 𝗨𝘀𝗲𝗿𝗻𝗮𝗺𝗲: @' + self.owner_username)}
-{self.bi('👥 𝗔𝗱𝗺𝗶𝗻𝘀: ' + str(len(admin_list)))}
-{self.bi('📋 𝗚𝗿𝗼𝘂𝗽𝘀: ' + str(len(saved_groups)))}
+{self.bi('📌 𝗦𝘁𝗮𝘁𝘂𝘀: ' + ('✅ 𝗘𝗡𝗔𝗕𝗟𝗘𝗗' if auto_delete_enabled else '❌ 𝗗𝗜𝗦𝗔𝗕𝗟𝗘𝗗'))}
+{self.bi('📌 𝗗𝗲𝗹𝗲𝘁𝗲 𝗧𝗶𝗺𝗲: 𝟮𝟰 𝗛𝗼𝘂𝗿𝘀')}
+{self.bi('📌 𝗔𝗹𝗹 𝗯𝗼𝘁 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝘄𝗶𝗹𝗹 𝗯𝗲')}
+{self.bi('   𝗱𝗲𝗹𝗲𝘁𝗲𝗱 𝗮𝗳𝘁𝗲𝗿 𝟮𝟰 𝗵𝗼𝘂𝗿𝘀')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('👇 𝗦𝗲𝗹𝗲𝗰𝘁 𝗔𝗻 𝗢𝗽𝘁𝗶𝗼𝗻 👇')}
+{self.bi('👇 𝗦𝗲𝗹𝗲𝗰𝘁 𝗢𝗽𝘁𝗶𝗼𝗻 👇')}
 """,
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
+                reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
             )
+            return
+        if data == "enable_auto_24":
+            global auto_delete_enabled
+            auto_delete_enabled = True
+            self.save_config()
+            # Schedule auto-delete for all saved groups
+            for gid in saved_groups:
+                try:
+                    chat_id = int(gid)
+                    await self.schedule_auto_delete_group(context, chat_id, 24)
+                except:
+                    pass
+            await query.answer("✅ 𝟮𝟰𝗛 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝗘𝗻𝗮𝗯𝗹𝗲𝗱!", show_alert=True)
+            await self.show_main_menu(query)
+            return
+        if data == "disable_auto_del":
+            auto_delete_enabled = False
+            self.save_config()
+            await query.answer("❌ 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝗗𝗶𝘀𝗮𝗯𝗹𝗲𝗱!", show_alert=True)
+            await self.show_main_menu(query)
             return
         if data == "delete_all_group":
             user_groups = self.get_user_groups(user_id)
             if not user_groups:
                 kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
-                await query.edit_message_text(
-                    f"{self.bi('📋 𝗡𝗼 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝗮𝘃𝗲𝗱')}",
-                    reply_markup=InlineKeyboardMarkup(kb),
-                    parse_mode=ParseMode.MARKDOWN
-                )
+                await query.edit_message_text(f"{self.bi('📋 𝗡𝗼 𝗚𝗿𝗼𝘂𝗽𝘀')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
                 return
             keyboard = []
             for gid, ginfo in list(user_groups.items())[:20]:
@@ -657,14 +612,8 @@ class PremiumGroupSpamBot:
                 keyboard.append([InlineKeyboardButton(f"🗑 {name}", callback_data=f"delg_{gid}")])
             keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")])
             await query.edit_message_text(
-                f"""
-{self.bi('🗑 𝗦𝗘𝗟𝗘𝗖𝗧 𝗚𝗥𝗢𝗨𝗣 𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘 🗑')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('⚠ 𝗕𝗼𝘁 𝗺𝘂𝘀𝘁 𝗯𝗲 𝗔𝗗𝗠𝗜𝗡 𝘄𝗶𝘁𝗵 𝗱𝗲𝗹𝗲𝘁𝗲 𝗿𝗶𝗴𝗵𝘁𝘀')}
-{self.bi('👇 𝗖𝗹𝗶𝗰𝗸 𝗚𝗿𝗼𝘂𝗽 𝗧𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝗠𝘀𝗴 👇')}
-""",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('🗑 𝗦𝗘𝗟𝗘𝗖𝗧 𝗚𝗥𝗢𝗨𝗣')}\n{self.bi('⚠ 𝗕𝗼𝘁 𝗺𝘂𝘀𝘁 𝗯𝗲 𝗔𝗗𝗠𝗜𝗡')}",
+                reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
             )
             return
         if data.startswith("delg_"):
@@ -674,16 +623,8 @@ class PremiumGroupSpamBot:
             except:
                 chat_id = gid
             gname = saved_groups.get(gid, {}).get("name", str(chat_id))
-            await query.edit_message_text(
-                f"""
-{self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗜𝗡𝗚 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦... 🗑')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-{self.bi('⏳ 𝗣𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁...')}
-""",
-                parse_mode=ParseMode.MARKDOWN
-            )
+            await query.edit_message_text(f"{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗶𝗻𝗴...')}", parse_mode=ParseMode.MARKDOWN)
             deleted = 0
-            failed = 0
             try:
                 async for msg in context.bot.get_chat_history(chat_id=chat_id, limit=200):
                     if msg.from_user and msg.from_user.id == context.bot.id:
@@ -692,122 +633,54 @@ class PremiumGroupSpamBot:
                             deleted += 1
                             await asyncio.sleep(0.05)
                         except:
-                            failed += 1
+                            pass
             except:
                 pass
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗣𝗔𝗡𝗘𝗟", callback_data="owner_panel")]]
-            if deleted > 0:
-                msg_text = f"""
-{self.bi('✅ 𝗗𝗘𝗟𝗘𝗧𝗘 𝗖𝗢𝗠𝗣𝗟𝗘𝗧𝗘𝗗 ✅')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + ' 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-{self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed) + ' 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-"""
-            else:
-                msg_text = f"""
-{self.bi('❌ 𝗡𝗢 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦 𝗗𝗘𝗟𝗘𝗧𝗘𝗗 ❌')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('⚠ 𝗣𝗼𝘀𝘀𝗶𝗯𝗹𝗲 𝗥𝗲𝗮𝘀𝗼𝗻𝘀:')}
-{self.bi('𝟭️ 𝗕𝗼𝘁 𝗶𝘀 𝗻𝗼𝘁 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('𝟮️ 𝗡𝗼 𝗱𝗲𝗹𝗲𝘁𝗲 𝗽𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻')}
-{self.bi('𝟯️ 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝘁𝗼𝗼 𝗼𝗹𝗱')}
-{self.bi('𝟰️ 𝗡𝗼 𝗯𝗼𝘁 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
-"""
-            await query.edit_message_text(msg_text, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
+            await query.edit_message_text(
+                f"{self.bi('✅ 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + ' 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}\n{self.bi('📌 ' + gname)}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
+            )
             return
         if data == "manage_admins":
             if user_id != self.owner_id:
-                await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿 𝗖𝗮𝗻 𝗠𝗮𝗻𝗮𝗴𝗲 𝗔𝗱𝗺𝗶𝗻𝘀!", show_alert=True)
+                await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿!", show_alert=True)
                 return
-            atext = f"""
-{self.bi('👥 𝗔𝗗𝗠𝗜𝗡 𝗠𝗔𝗡𝗔𝗚𝗘𝗠𝗘𝗡𝗧 👥')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-
-{self.bi('👑 𝗢𝘄𝗻𝗲𝗿: @' + self.owner_username + ' (' + str(self.owner_id) + ')')}
-
-{self.bi('👥 𝗔𝗱𝗺𝗶𝗻 𝗟𝗶𝘀𝘁:')}
-"""
-            for aid in admin_list:
-                if aid != self.owner_id:
-                    atext += f"{self.bi('• ' + str(aid))}\n"
-            if len(admin_list) <= 1:
-                atext += f"{self.bi('• 𝗡𝗼 𝗢𝘁𝗵𝗲𝗿 𝗔𝗱𝗺𝗶𝗻𝘀')}\n"
-            atext += f"""
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('👇 𝗦𝗲𝗻𝗱 𝗨𝘀𝗲𝗿 𝗜𝗗 𝗧𝗼 𝗔𝗱𝗱/𝗥𝗲𝗺𝗼𝘃𝗲:')}
-"""
             user_states[user_id] = {"step": "waiting_for_admin_id"}
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗣𝗔𝗡𝗘𝗟", callback_data="owner_panel")]]
-            await query.edit_message_text(atext, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
+            await query.edit_message_text(f"{self.bi('👥 𝗦𝗲𝗻𝗱 𝗨𝘀𝗲𝗿 𝗜𝗗:')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data.startswith("style_"):
             msg_type = data.replace("style_", "")
             user_states[user_id]["msg_type"] = msg_type
             user_states[user_id]["step"] = "waiting_for_content"
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
             style_names = {
-                "text": "💬 𝗡𝗢𝗥𝗠𝗔𝗟 𝗧𝗘𝗫𝗧",
-                "bold": "𝗕 𝗕𝗢𝗟𝗗 𝗧𝗘𝗫𝗧",
-                "italic": "𝑰 𝗜𝗧𝗔𝗟𝗜𝗖 𝗧𝗘𝗫𝗧",
-                "bold_italic": "𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖",
-                "mono": "𝙼 𝗠𝗢𝗡𝗢𝗦𝗣𝗔𝗖𝗘",
-                "sans": "𝖲 𝗦𝗔𝗡𝗦 𝗧𝗘𝗫𝗧",
-                "sans_bold": "𝗦𝗕 𝗦𝗔𝗡𝗦 𝗕𝗢𝗟𝗗",
-                "sans_italic": "𝘚𝘐 𝘚𝘈𝘕𝘚 𝘐𝘛𝘈𝘓𝘐𝘊",
-                "sans_bi": "𝙎𝘽𝙄 𝙎𝘼𝙉𝙎 𝘽𝙊𝙇𝘿 𝙄𝙏𝘼𝙇𝙄𝘾",
+                "text": "💬 𝗡𝗢𝗥𝗠𝗔𝗟", "bold": "𝗕 𝗕𝗢𝗟𝗗", "italic": "𝑰 𝗜𝗧𝗔𝗟𝗜𝗖",
+                "bold_italic": "𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", "mono": "𝙼 𝗠𝗢𝗡𝗢",
+                "sans": "𝖲 𝗦𝗔𝗡𝗦", "sans_bold": "𝗦𝗕 𝗦𝗔𝗡𝗦 𝗕𝗢𝗟𝗗",
+                "sans_italic": "𝘚𝘐 𝘚𝘈𝘕𝘚 𝘐𝘛𝘈𝘓𝘐𝘊", "sans_bi": "𝙎𝘽𝙄 𝙎𝘼𝙉𝙎 𝘽𝙄",
                 "serif_bold": "𝐒𝐁 𝐒𝐄𝐑𝐈𝐅 𝐁𝐎𝐋𝐃"
             }
-            sn = style_names.get(msg_type, "𝗦𝗘𝗡𝗗 𝗖𝗢𝗡𝗧𝗘𝗡𝗧")
-            await query.edit_message_text(
-                f"""
-{self.bi(sn)}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📤 𝗦𝗲𝗻𝗱 𝗬𝗼𝘂𝗿 𝗧𝗲𝘅𝘁 𝗡𝗼𝘄:')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            sn = style_names.get(msg_type, "𝗦𝗘𝗡𝗗")
+            await query.edit_message_text(f"{self.bi(sn)}\n{self.bi('📤 𝗦𝗲𝗻𝗱 𝘆𝗼𝘂𝗿 𝘁𝗲𝘅𝘁:')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data.startswith("media_"):
             mtype = data.replace("media_", "")
             user_states[user_id]["msg_type"] = mtype
             user_states[user_id]["step"] = "waiting_for_content"
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
-            media_names = {
-                "sticker": "🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", "photo": "🖼 𝗣𝗛𝗢𝗧𝗢",
-                "video": "🎥 𝗩𝗜𝗗𝗘𝗢", "document": "📄 𝗗𝗢𝗖𝗨𝗠𝗘𝗡𝗧",
-                "audio": "🎵 𝗔𝗨𝗗𝗜𝗢", "voice": "🎤 𝗩𝗢𝗜𝗖𝗘",
-                "video_note": "📹 𝗩𝗜𝗗𝗘𝗢 𝗡𝗢𝗧𝗘"
-            }
-            mn = media_names.get(mtype, "𝗦𝗘𝗡𝗗 𝗠𝗘𝗗𝗜𝗔")
-            await query.edit_message_text(
-                f"""
-{self.bi(mn)}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📤 𝗦𝗲𝗻𝗱 𝗬𝗼𝘂𝗿 𝗠𝗲𝗱𝗶𝗮 𝗡𝗼𝘄:')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
+            await query.edit_message_text(f"{self.bi('📤 𝗦𝗲𝗻𝗱 𝗺𝗲𝗱𝗶𝗮:')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data == "show_styles":
             await self.show_style_menu(query, user_id)
             return
         if data == "show_count":
             user_states[user_id]["step"] = "waiting_for_count"
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
             await query.edit_message_text(
-                f"""
-{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬 𝗧𝗜𝗠𝗘𝗦? (𝟭-𝟭𝟬𝟬) 🔢')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗔 𝗡𝘂𝗺𝗯𝗲𝗿 𝗳𝗿𝗼𝗺 𝟭 𝘁𝗼 𝟭𝟬𝟬')}
-{self.bi('💡 𝗥𝗲𝗰𝗼𝗺𝗺𝗲𝗻𝗱𝗲𝗱: 𝟭𝟬 𝗙𝗼𝗿 𝗧𝗲𝘀𝘁')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬? (𝟭-𝟭𝟬𝟬)')}\n{self.bi('📌 𝗦𝗲𝗻𝗱 𝗮 𝗻𝘂𝗺𝗯𝗲𝗿 𝟭 𝘁𝗼 𝟭𝟬𝟬')}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
         if data.startswith("speed_"):
@@ -854,16 +727,8 @@ class PremiumGroupSpamBot:
             [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
         ]
         await query.edit_message_text(
-            f"""
-{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘 𝗢𝗥 𝗠𝗘𝗗𝗜𝗔 🎯')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-
-{self.bi('👇 𝗖𝗵𝗼𝗼𝘀𝗲 𝗙𝗿𝗼𝗺 𝟭𝟬 𝗦𝘁𝘆𝗹𝗲𝘀 𝗢𝗿 𝟳 𝗠𝗲𝗱𝗶𝗮 👇')}
-""",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode=ParseMode.MARKDOWN
+            f"{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘')}\n{self.bi('📌 ' + gname)}",
+            reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
         )
     
     async def message_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -891,35 +756,18 @@ class PremiumGroupSpamBot:
                 if tid in admin_list:
                     admin_list.remove(tid)
                     self.save_admins()
-                    await update.message.reply_text(
-                        f"{self.bi('✅ 𝗔𝗱𝗺𝗶𝗻 𝗥𝗲𝗺𝗼𝘃𝗲𝗱: ' + str(tid))}",
-                        parse_mode=ParseMode.MARKDOWN
-                    )
+                    await update.message.reply_text(f"{self.bi('✅ 𝗥𝗲𝗺𝗼𝘃𝗲𝗱: ' + str(tid))}", parse_mode=ParseMode.MARKDOWN)
                 else:
                     admin_list.add(tid)
                     self.save_admins()
-                    await update.message.reply_text(
-                        f"{self.bi('✅ 𝗔𝗱𝗺𝗶𝗻 𝗔𝗱𝗱𝗲𝗱: ' + str(tid))}",
-                        parse_mode=ParseMode.MARKDOWN
-                    )
+                    await update.message.reply_text(f"{self.bi('✅ 𝗔𝗱𝗱𝗲𝗱: ' + str(tid))}", parse_mode=ParseMode.MARKDOWN)
             except:
-                await update.message.reply_text(
-                    f"{self.bi('❌ 𝗜𝗻𝘃𝗮𝗹𝗶𝗱 𝗨𝘀𝗲𝗿 𝗜𝗗')}\n{self.bi('𝗦𝗲𝗻𝗱 𝗡𝘂𝗺𝗲𝗿𝗶𝗰 𝗜𝗗 𝗢𝗻𝗹𝘆')}",
-                    parse_mode=ParseMode.MARKDOWN
-                )
+                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗻𝘃𝗮𝗹𝗶𝗱')}", parse_mode=ParseMode.MARKDOWN)
             return
         
         if step == "waiting_for_delete_group":
             text = update.message.text.strip()
-            await update.message.reply_text(
-                f"""
-{self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗥𝗘𝗤𝗨𝗘𝗦𝗧 𝗦𝗘𝗡𝗧 🗑')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + text)}
-{self.bi('⚠ 𝗕𝗼𝘁 𝗠𝘂𝘀𝘁 𝗕𝗲 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('💡 𝗧𝗿𝘆𝗶𝗻𝗴 𝗧𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝗥𝗲𝗰𝗲𝗻𝘁 𝗠𝘀𝗴')}
-""",
-                parse_mode=ParseMode.MARKDOWN
-            )
+            await update.message.reply_text(f"{self.bi('🗑 𝗥𝗲𝗾𝘂𝗲𝘀𝘁 𝗦𝗲𝗻𝘁')}", parse_mode=ParseMode.MARKDOWN)
             if user_id in user_states:
                 del user_states[user_id]
             return
@@ -933,80 +781,49 @@ class PremiumGroupSpamBot:
                 user_groups = self.get_user_groups(user_id)
                 user_groups[str(chat_id)] = {
                     "name": gname, "id": str(chat_id),
-                    "members": str(info["members"]),
-                    "admins": str(info["admins"]),
-                    "online": str(info["online"])
+                    "members": str(info["members"]), "online": str(info["online"])
                 }
                 self.save_user_groups(user_id, user_groups)
                 user_states[user_id].update({"chat_id": chat_id, "group_name": gname, "step": "waiting_for_type"})
+                
+                # ✅ Schedule auto-delete for this group if enabled
+                if auto_delete_enabled:
+                    asyncio.create_task(self.schedule_auto_delete_group(context, chat_id, 24))
                 
                 keyboard = [
                     [InlineKeyboardButton("💬 𝗡𝗢𝗥𝗠𝗔𝗟", callback_data="style_text"),
                      InlineKeyboardButton("𝗕 𝗕𝗢𝗟𝗗", callback_data="style_bold")],
                     [InlineKeyboardButton("𝑰 𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="style_italic"),
-                     InlineKeyboardButton("𝑩𝑰 𝗕𝗢𝗟𝗗+𝗜𝗧𝗔𝗟𝗜𝗖", callback_data="style_bold_italic")],
-                    [InlineKeyboardButton("𝙼 𝗠𝗢𝗡𝗢", callback_data="style_mono"),
-                     InlineKeyboardButton("𝖲 𝗦𝗔𝗡𝗦", callback_data="style_sans")],
-                    [InlineKeyboardButton("𝗦𝗕 𝗦𝗔𝗡𝗦 𝗕𝗢𝗟𝗗", callback_data="style_sans_bold"),
-                     InlineKeyboardButton("𝘚𝘐 𝘚𝘈𝘕𝘚 𝘐𝘛𝘈𝘓𝘐𝘊", callback_data="style_sans_italic")],
-                    [InlineKeyboardButton("𝙎𝘽𝙄 𝙎𝘼𝙉𝙎 𝘽𝙄", callback_data="style_sans_bi"),
-                     InlineKeyboardButton("𝐒𝐁 𝐒𝐄𝐑𝐈𝐅 𝐁𝐎𝐋𝐃", callback_data="style_serif_bold")],
+                     InlineKeyboardButton("𝑩𝑰 𝗕&𝗜", callback_data="style_bold_italic")],
                     [InlineKeyboardButton("🎯 𝗦𝗧𝗜𝗖𝗞𝗘𝗥", callback_data="media_sticker"),
                      InlineKeyboardButton("🖼 𝗣𝗛𝗢𝗧𝗢", callback_data="media_photo")],
-                    [InlineKeyboardButton("🎥 𝗩𝗜𝗗𝗘𝗢", callback_data="media_video"),
-                     InlineKeyboardButton("📄 𝗗𝗢𝗖", callback_data="media_document")],
-                    [InlineKeyboardButton("🎵 𝗔𝗨𝗗𝗜𝗢", callback_data="media_audio"),
-                     InlineKeyboardButton("🎤 𝗩𝗢𝗜𝗖𝗘", callback_data="media_voice")],
-                    [InlineKeyboardButton("📹 𝗩𝗜𝗗 𝗡𝗢𝗧𝗘", callback_data="media_video_note")],
-                    [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
+                    [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]
                 ]
                 
                 await update.message.reply_text(
                     f"""
-{self.bi('✅ 𝗚𝗥𝗢𝗨𝗣 𝗙𝗢𝗨𝗡𝗗 & 𝗦𝗔𝗩𝗘𝗗 ✅')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗡𝗮𝗺𝗲: ' + gname)}
-{self.bi('🆔 𝗜𝗗: ' + str(chat_id))}
-{self.bi('👥 𝗠𝗲𝗺𝗯𝗲𝗿𝘀: ' + str(info['members']))}
-{self.bi('🟢 𝗢𝗻𝗹𝗶𝗻𝗲: ' + str(info['online']) + ' (𝗥𝗘𝗔𝗟)')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
+{self.bi('✅ 𝗚𝗥𝗢𝗨𝗣 𝗙𝗢𝗨𝗡𝗗 ✅')}
+{self.bi('📌 ' + gname)}
+{self.bi('🆔 ' + str(chat_id))}
+{self.bi('👥 ' + str(info['members']) + ' | 🟢 ' + str(info['online']) + ' (𝗥𝗘𝗔𝗟)')}
+{self.bi('🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹: ' + ('✅ 𝟮𝟰𝗛' if auto_delete_enabled else '❌ 𝗢𝗙𝗙'))}
 
-{self.bi('🎯 𝗡𝗢𝗪 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘 𝗢𝗥 𝗠𝗘𝗗𝗜𝗔 🎯')}
+{self.bi('🎯 𝗦𝗘𝗟𝗘𝗖𝗧 𝗦𝗧𝗬𝗟𝗘 🎯')}
 """,
-                    reply_markup=InlineKeyboardMarkup(keyboard),
-                    parse_mode=ParseMode.MARKDOWN
+                    reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
                 )
             else:
-                kb = [
-                    [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦", callback_data="saved_groups_menu")],
-                    [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]
-                ]
-                await update.message.reply_text(
-                    f"""
-{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 ❌')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('💡 𝗨𝘀𝗲 /𝗚𝗲𝘁𝗜𝗱 𝗜𝗻 𝗚𝗿𝗼𝘂𝗽')}
-{self.bi('💡 𝗢𝗿 𝗦𝗲𝗻𝗱 𝗖𝗼𝗿𝗿𝗲𝗰𝘁 𝗙𝗼𝗿𝗺𝗮𝘁')}
-{self.bi('📌 𝗙𝗼𝗿𝗺𝗮𝘁: -𝟭𝟬𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵𝟬')}
-""",
-                    reply_markup=InlineKeyboardMarkup(kb),
-                    parse_mode=ParseMode.MARKDOWN
-                )
+                kb = [[InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗", callback_data="saved_groups_menu"), InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="main_menu")]]
+                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗')}", reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         
         if step == "waiting_for_content":
             user_states[user_id]["content"] = update.message
             user_states[user_id]["step"] = "waiting_for_count"
-            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
+            kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_styles")]]
             await update.message.reply_text(
-                f"""
-{self.bi('✅ 𝗖𝗢𝗡𝗧𝗘𝗡𝗧 𝗥𝗘𝗖𝗘𝗜𝗩𝗘𝗗 ✅')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬 𝗧𝗜𝗠𝗘𝗦? (𝟭-𝟭𝟬𝟬) 🔢')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗔 𝗡𝘂𝗺𝗯𝗲𝗿 𝗳𝗿𝗼𝗺 𝟭 𝘁𝗼 𝟭𝟬𝟬')}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
+                f"{self.bi('✅ 𝗖𝗢𝗡𝗧𝗘𝗡𝗧 𝗥𝗘𝗖𝗘𝗜𝗩𝗘𝗗 ✅')}\n{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬? (𝟭-𝟭𝟬𝟬)')}",
+                reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN
             )
             return
         
@@ -1021,27 +838,14 @@ class PremiumGroupSpamBot:
                      InlineKeyboardButton("🚀 𝗙𝗔𝗦𝗧 (𝟬.𝟯𝘀)", callback_data="speed_fast")],
                     [InlineKeyboardButton("🐢 𝗡𝗢𝗥𝗠𝗔𝗟 (𝟬.𝟱𝘀)", callback_data="speed_normal"),
                      InlineKeyboardButton("🦥 𝗦𝗟𝗢𝗪 (𝟭𝘀)", callback_data="speed_slow")],
-                    [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗖𝗢𝗨𝗡𝗧", callback_data="show_count")]
+                    [InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="show_count")]
                 ]
                 await update.message.reply_text(
-                    f"""
-{self.bi('⚡ 𝗖𝗛𝗢𝗢𝗦𝗘 𝗦𝗣𝗘𝗘𝗗 ⚡')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('🔢 𝗖𝗼𝘂𝗻𝘁: ' + str(count))}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-
-{self.bi('👇 𝗦𝗲𝗹𝗲𝗰𝘁 𝗦𝗽𝗲𝗲𝗱 𝗕𝗲𝗹𝗼𝘄 👇')}
-""",
-                    reply_markup=InlineKeyboardMarkup(keyboard),
-                    parse_mode=ParseMode.MARKDOWN
+                    f"{self.bi('⚡ 𝗦𝗣𝗘𝗘𝗗')}\n{self.bi('🔢 𝗖𝗼𝘂𝗻𝘁: ' + str(count))}",
+                    reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
                 )
-            except ValueError:
-                kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
-                await update.message.reply_text(
-                    f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗡𝗨𝗠𝗕𝗘𝗥 ❌')}\n{self.bi('𝗦𝗲𝗻𝗱 𝟭 𝘁𝗼 𝟭𝟬𝟬')}",
-                    reply_markup=InlineKeyboardMarkup(kb),
-                    parse_mode=ParseMode.MARKDOWN
-                )
+            except:
+                await update.message.reply_text(f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗! 𝗦𝗲𝗻𝗱 𝟭-𝟭𝟬𝟬')}", parse_mode=ParseMode.MARKDOWN)
             return
     
     def parse_chat_id(self, text):
@@ -1069,7 +873,6 @@ class PremiumGroupSpamBot:
         msg_type = data.get("msg_type", "text")
         content = data.get("content")
         
-        # ✅ Set active spam task
         active_spam_tasks[user_id] = True
         
         try:
@@ -1077,18 +880,15 @@ class PremiumGroupSpamBot:
         except:
             pass
         
-        # ✅ Status message with STOP button
         status_msg = await context.bot.send_message(
             chat_id=query.message.chat_id,
             text=f"""
-{self.bi('🔥 𝗦𝗣𝗔𝗠 𝗔𝗧𝗧𝗔𝗖𝗞 𝗦𝗧𝗔𝗥𝗧𝗘𝗗 🔥')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-{self.bi('🎯 𝗧𝘆𝗽𝗲: ' + msg_type)}
-{self.bi('🔢 𝗖𝗼𝘂𝗻𝘁: ' + str(count))}
-{self.bi('⚡ 𝗦𝗽𝗲𝗲𝗱: ' + str(delay) + '𝘀')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('🚀 𝗦𝗘𝗡𝗗𝗜𝗡𝗚 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦 𝗡𝗢𝗪... 🚀')}
+{self.bi('🔥 𝗦𝗣𝗔𝗠 𝗦𝗧𝗔𝗥𝗧𝗘𝗗 🔥')}
+{self.bi('━━━━━━━━━━━━━━')}
+{self.bi('📌 ' + gname)}
+{self.bi('🎯 ' + msg_type + ' | 🔢 ' + str(count) + ' | ⚡ ' + str(delay) + 's')}
+{self.bi('🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹: ' + ('✅ 𝟮𝟰𝗛' if auto_delete_enabled else '❌ 𝗢𝗙𝗙'))}
+{self.bi('━━━━━━━━━━━━━━')}
 """,
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 𝗦𝗧𝗢𝗣 𝗦𝗣𝗔𝗠 🛑", callback_data="stop_spam")]]),
             parse_mode=ParseMode.MARKDOWN
@@ -1096,7 +896,6 @@ class PremiumGroupSpamBot:
         
         success = 0
         failed = 0
-        error_msg = None
         sent_message_ids = []
         
         text_types = ["text", "bold", "italic", "bold_italic", "mono", "sans", "sans_bold", "sans_italic", "sans_bi", "serif_bold"]
@@ -1105,20 +904,7 @@ class PremiumGroupSpamBot:
             style_func = self.get_style_function(msg_type)
         
         for i in range(count):
-            # ✅ Check if STOP was pressed
             if not active_spam_tasks.get(user_id, False):
-                try:
-                    await status_msg.edit_text(
-                        f"""
-{self.bi('🛑 𝗦𝗣𝗔𝗠 𝗦𝗧𝗢𝗣𝗣𝗘𝗗 🛑')}
-{self.bi('━━━━━━━━━━━━━━')}
-{self.bi('✅ 𝗦𝗲𝗻𝘁 𝗕𝗲𝗳𝗼𝗿𝗲 𝗦𝘁𝗼𝗽: ' + str(success))}
-{self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed))}
-""",
-                        parse_mode=ParseMode.MARKDOWN
-                    )
-                except:
-                    pass
                 break
             
             try:
@@ -1135,69 +921,32 @@ class PremiumGroupSpamBot:
                         sent_msg = await context.bot.send_sticker(chat_id=chat_id, sticker=content.sticker.file_id)
                     else:
                         failed += 1
-                        error_msg = "No sticker found"
                         break
-                elif msg_type == "photo":
-                    if content and content.photo:
-                        sent_msg = await context.bot.send_photo(chat_id=chat_id, photo=content.photo[-1].file_id, caption=content.caption or "")
+                elif msg_type in ["photo", "video", "document", "audio", "voice", "video_note"]:
+                    if content and (content.photo or content.video or content.document or content.audio or content.voice or content.video_note):
+                        sent_msg = await content.copy(chat_id)
                     else:
                         failed += 1
-                        error_msg = "No photo found"
-                        break
-                elif msg_type == "video":
-                    if content and content.video:
-                        sent_msg = await context.bot.send_video(chat_id=chat_id, video=content.video.file_id, caption=content.caption or "")
-                    else:
-                        failed += 1
-                        error_msg = "No video found"
-                        break
-                elif msg_type == "document":
-                    if content and content.document:
-                        sent_msg = await context.bot.send_document(chat_id=chat_id, document=content.document.file_id, caption=content.caption or "")
-                    else:
-                        failed += 1
-                        error_msg = "No document found"
-                        break
-                elif msg_type == "audio":
-                    if content and content.audio:
-                        sent_msg = await context.bot.send_audio(chat_id=chat_id, audio=content.audio.file_id, caption=content.caption or "")
-                    else:
-                        failed += 1
-                        error_msg = "No audio found"
-                        break
-                elif msg_type == "voice":
-                    if content and content.voice:
-                        sent_msg = await context.bot.send_voice(chat_id=chat_id, voice=content.voice.file_id, caption=content.caption or "")
-                    else:
-                        failed += 1
-                        error_msg = "No voice found"
-                        break
-                elif msg_type == "video_note":
-                    if content and content.video_note:
-                        sent_msg = await context.bot.send_video_note(chat_id=chat_id, video_note=content.video_note.file_id)
-                    else:
-                        failed += 1
-                        error_msg = "No video note found"
                         break
                 else:
                     failed += 1
-                    error_msg = "Unknown type"
                     break
                 
                 if sent_msg:
                     sent_message_ids.append(sent_msg.message_id)
                     success += 1
+                    
+                    # ✅ Schedule auto-delete after 24 hours if enabled
+                    if auto_delete_enabled:
+                        asyncio.create_task(self.auto_delete_msg_after(context, chat_id, sent_msg.message_id, 24))
                 
-                # ✅ Update progress every 5 messages
                 if success % 5 == 0:
                     try:
                         await status_msg.edit_text(
                             f"""
-{self.bi('⚡ 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 𝗜𝗡 𝗣𝗥𝗢𝗚𝗥𝗘𝗦𝗦 ⚡')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-{self.bi('✅ 𝗦𝗲𝗻𝘁: ' + str(success) + '/' + str(count))}
-{self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed))}
+{self.bi('⚡ 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚... ⚡')}
+{self.bi('✅ ' + str(success) + '/' + str(count))}
+{self.bi('📌 ' + gname)}
 """,
                             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 𝗦𝗧𝗢𝗣 𝗦𝗣𝗔𝗠 🛑", callback_data="stop_spam")]]),
                             parse_mode=ParseMode.MARKDOWN
@@ -1209,32 +958,14 @@ class PremiumGroupSpamBot:
                 
             except Exception as e:
                 failed += 1
-                error_str = str(e).lower()
-                if "not enough rights" in error_str:
-                    error_msg = f"Need ADMIN with send permission"
-                    break
-                elif "forbidden" in error_str or "blocked" in error_str:
-                    error_msg = "Bot not in group or blocked"
-                    break
-                elif "not found" in error_str:
-                    error_msg = "Group not found"
-                    break
-                elif "message to forward" in error_str:
-                    error_msg = "Content error. Send again."
-                    break
                 if failed > 3:
                     break
         
-        # ✅ Clean up active task
         if user_id in active_spam_tasks:
             del active_spam_tasks[user_id]
         
         if success > 0:
-            last_spam_messages[user_id] = {
-                "chat_id": chat_id,
-                "message_ids": sent_message_ids,
-                "group_name": gname
-            }
+            last_spam_messages[user_id] = {"chat_id": chat_id, "message_ids": sent_message_ids, "group_name": gname}
         
         try:
             await status_msg.delete()
@@ -1243,35 +974,22 @@ class PremiumGroupSpamBot:
         
         result = f"""
 {self.bi('✅ 𝗠𝗜𝗦𝗦𝗜𝗢𝗡 𝗖𝗢𝗠𝗣𝗟𝗘𝗧𝗘𝗗 ✅')}
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-{self.bi('✅ 𝗦𝘂𝗰𝗰𝗲𝘀𝘀: ' + str(success))}
-{self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed))}
-{self.bi('🎯 𝗧𝘆𝗽𝗲: ' + msg_type)}
-{self.bi('⚡ 𝗦𝗽𝗲𝗲𝗱: ' + str(delay) + '𝘀')}
-"""
-        if error_msg and success == 0:
-            result += f"""
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('⚠ 𝗘𝗥𝗥𝗢𝗥: ' + error_msg)}
-{self.bi('💡 𝗦𝗢𝗟𝗨𝗧𝗜𝗢𝗡:')}
-{self.bi('𝟭️ 𝗠𝗮𝗸𝗲 𝗕𝗼𝘁 𝗔𝗗𝗠𝗜𝗡')}
-{self.bi('𝟮️ 𝗘𝗻𝗮𝗯𝗹𝗲 𝗔𝗹𝗹 𝗣𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻𝘀')}
-"""
-        result += f"""
-{self.bi('━━━━━━━━━━━━━━━━━━')}
-
-{self.bi('👇 𝗪𝗛𝗔𝗧 𝗗𝗢 𝗬𝗢𝗨 𝗪𝗔𝗡𝗧 𝗧𝗢 𝗗𝗢 𝗡𝗘𝗫𝗧? 👇')}
+{self.bi('━━━━━━━━━━━━━━')}
+{self.bi('📌 ' + gname)}
+{self.bi('✅ ' + str(success) + ' | ❌ ' + str(failed))}
+{self.bi('🎯 ' + msg_type + ' | ⚡ ' + str(delay) + 's')}
+{self.bi('🗑 𝗔𝘂𝘁𝗼 𝗗𝗲𝗹 𝟮𝟰𝗛: ' + ('✅' if auto_delete_enabled else '❌'))}
+{self.bi('━━━━━━━━━━━━━━')}
+{self.bi('👇 𝗪𝗛𝗔𝗧 𝗡𝗘𝗫𝗧? 👇')}
 """
         
         keyboard = [
-            [InlineKeyboardButton("🔄 𝗥𝗘𝗦𝗘𝗡𝗗 𝗦𝗔𝗠𝗘", callback_data="resend_same"),
-             InlineKeyboardButton("🆕 𝗡𝗘𝗪 𝗦𝗣𝗔𝗠", callback_data="new_spam")],
-            [InlineKeyboardButton("🎨 𝗖𝗛𝗔𝗡𝗚𝗘 𝗦𝗧𝗬𝗟𝗘", callback_data="change_style")]
+            [InlineKeyboardButton("🔄 𝗥𝗘𝗦𝗘𝗡𝗗", callback_data="resend_same"),
+             InlineKeyboardButton("🎨 𝗦𝗧𝗬𝗟𝗘", callback_data="change_style")]
         ]
         if success > 0:
             keyboard.append([InlineKeyboardButton("🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗘𝗡𝗧 𝗠𝗦𝗚 🗑", callback_data="delete_last_spam")])
-        keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")])
+        keyboard.append([InlineKeyboardButton("🔙 𝗠𝗔𝗜𝗡 𝗠𝗘𝗡𝗨", callback_data="main_menu")])
         
         await context.bot.send_message(
             chat_id=query.message.chat_id,
@@ -1316,7 +1034,7 @@ def main():
 ║   𝟬.𝟭𝘀 𝗨𝗟𝗧𝗥𝗔 𝗦𝗣𝗘𝗘𝗗 𝗔𝗖𝗧𝗜𝗩𝗘          ║
 ║   🛑 𝗦𝗧𝗢𝗣 𝗕𝗨𝗧𝗧𝗢𝗡 𝗔𝗖𝗧𝗜𝗩𝗘           ║
 ║   𝟭-𝟭𝟬𝟬 𝗖𝗨𝗦𝗧𝗢𝗠 𝗥𝗔𝗡𝗚𝗘             ║
-║   🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗖𝗧𝗜𝗩𝗘        ║
+║   🗑 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘 𝟮𝟰𝗛 𝗔𝗖𝗧𝗜𝗩𝗘      ║
 ║   👥 𝗔𝗗𝗠𝗜𝗡 𝗦𝗘𝗣𝗔𝗥𝗔𝗧𝗘 𝗗𝗔𝗧𝗔         ║
 ║                                      ║
 ║   👤 𝗢𝘄𝗻𝗲𝗿: @{OWNER_USERNAME}     ║
