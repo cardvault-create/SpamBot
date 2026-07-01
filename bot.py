@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAE66qU9Q3vIhkWajjNRyZL6LAqhldIsL_k")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8887965375:AAFk46s5GaAAExeJUiEpUYh_-OkRC5h94SQ")
 OWNER_ID = int(os.getenv("OWNER_ID", "7614459746"))
 OWNER_USERNAME = "BeStChEaT_OwNeR"
 API_ID = int(os.getenv("API_ID", "37864401"))
@@ -28,13 +28,16 @@ telethon_client = None
 
 user_states = {}
 saved_groups = {}
+admin_groups = {}
 admin_list = set()
 auto_delete_enabled = True
 last_spam_messages = {}
+active_spam_tasks = {}
 
 GROUPS_FILE = "saved_groups.json"
 ADMIN_FILE = "admin_list.json"
 CONFIG_FILE = "config.json"
+ADMIN_GROUPS_FILE = "admin_groups.json"
 
 async def init_telethon():
     global telethon_client
@@ -77,7 +80,7 @@ class PremiumGroupSpamBot:
         self.load_data()
     
     def load_data(self):
-        global saved_groups, admin_list, auto_delete_enabled
+        global saved_groups, admin_list, auto_delete_enabled, admin_groups
         try:
             with open(GROUPS_FILE, 'r') as f:
                 saved_groups = json.load(f)
@@ -95,6 +98,11 @@ class PremiumGroupSpamBot:
                 auto_delete_enabled = config.get("auto_delete", True)
         except:
             auto_delete_enabled = True
+        try:
+            with open(ADMIN_GROUPS_FILE, 'r') as f:
+                admin_groups = json.load(f)
+        except:
+            admin_groups = {}
     
     def save_groups(self):
         with open(GROUPS_FILE, 'w') as f:
@@ -108,13 +116,31 @@ class PremiumGroupSpamBot:
         with open(CONFIG_FILE, 'w') as f:
             json.dump({"auto_delete": auto_delete_enabled}, f)
     
+    def save_admin_groups(self):
+        with open(ADMIN_GROUPS_FILE, 'w') as f:
+            json.dump(admin_groups, f)
+    
     def is_authorized(self, user_id):
         return user_id == self.owner_id or user_id in admin_list
+    
+    def get_user_groups(self, user_id):
+        if user_id == self.owner_id:
+            return saved_groups
+        else:
+            return admin_groups.get(str(user_id), {})
+    
+    def save_user_groups(self, user_id, groups):
+        if user_id == self.owner_id:
+            global saved_groups
+            saved_groups = groups
+            self.save_groups()
+        else:
+            admin_groups[str(user_id)] = groups
+            self.save_admin_groups()
     
     def bi(self, text):
         return f"***{text}***"
     
-    # 10 TEXT STYLES
     def style_bold(self, t):
         m = dict(zip('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789','𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'))
         return ''.join(m.get(c,c) for c in t)
@@ -192,12 +218,8 @@ class PremiumGroupSpamBot:
             online = await get_real_online_count(chat_id)
             
             return {
-                "title": title,
-                "type": ctype,
-                "members": count,
-                "admins": admin_count,
-                "desc": desc,
-                "online": online
+                "title": title, "type": ctype, "members": count,
+                "admins": admin_count, "desc": desc, "online": online
             }
         except:
             return {"title": str(chat_id), "type": "Unknown", "members": 0, "admins": 0, "desc": "N/A", "online": "N/A"}
@@ -213,36 +235,54 @@ class PremiumGroupSpamBot:
         
         auto_status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
         
-        keyboard = [
-            [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
-            [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
-             InlineKeyboardButton("➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 ➕", callback_data="add_group_manual")],
-            [InlineKeyboardButton("🆔 𝗚𝗘𝗧 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 🆔", callback_data="get_id_info"),
-             InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
-            [InlineKeyboardButton("📊 𝗦𝗧𝗔𝗧𝗦 📊", callback_data="my_stats"),
-             InlineKeyboardButton("🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐", callback_data="owner_panel")],
-            [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟: {auto_status}", callback_data="toggle_auto_delete")],
-            [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
-        ]
-        
-        msg = f"""
+        if user_id == self.owner_id:
+            keyboard = [
+                [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
+                [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
+                 InlineKeyboardButton("➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 ➕", callback_data="add_group_manual")],
+                [InlineKeyboardButton("🆔 𝗚𝗘𝗧 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 🆔", callback_data="get_id_info"),
+                 InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
+                [InlineKeyboardButton("📊 𝗦𝗧𝗔𝗧𝗦 📊", callback_data="my_stats"),
+                 InlineKeyboardButton("🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐", callback_data="owner_panel")],
+                [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟: {auto_status}", callback_data="toggle_auto_delete")],
+                [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
+            ]
+            msg = f"""
 {self.bi('👑 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
-
 {self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗖𝗞 𝗠𝗔𝗦𝗧𝗘𝗥 💎')}
-
 {self.bi('⭐ 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗙𝗘𝗔𝗧𝗨𝗥𝗘𝗦 ⭐')}
 {self.bi('• 𝟭𝟬 𝗨𝗻𝗶𝗾𝘂𝗲 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
 {self.bi('• 🟢 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗠𝗲𝗺𝗯𝗲𝗿𝘀 𝗖𝗼𝘂𝗻𝘁')}
+{self.bi('• 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 𝘁𝗼 𝗛𝗮𝗹𝘁 𝗦𝗽𝗮𝗺')}
+{self.bi('• 𝟭-𝟭𝟬𝟬 𝗖𝘂𝘀𝘁𝗼𝗺 𝗠𝗲𝘀𝘀𝗮𝗴𝗲 𝗥𝗮𝗻𝗴𝗲')}
 {self.bi('• 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝗲𝗻𝘁 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
 {self.bi('• 𝗦𝗮𝘃𝗲𝗱 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝘆𝘀𝘁𝗲𝗺')}
 {self.bi('• 𝗔𝗱𝗺𝗶𝗻 𝗠𝗮𝗻𝗮𝗴𝗲𝗺𝗲𝗻𝘁')}
 {self.bi('• 𝗨𝗹𝘁𝗿𝗮 𝗙𝗮𝘀𝘁 𝟬.𝟭𝘀 𝗦𝗽𝗲𝗲𝗱')}
-
 {self.bi('🔒 𝗦𝗧𝗔𝗧𝗨𝗦: 𝗣𝗿𝗶𝘃𝗮𝘁𝗲 𝗠𝗼𝗱𝗲')}
 {self.bi('👑 𝗔𝗖𝗖𝗘𝗦𝗦: 𝗔𝘂𝘁𝗵𝗼𝗿𝗶𝘇𝗲𝗱 𝗢𝗻𝗹𝘆')}
 {self.bi('💎 𝗣𝗟𝗔𝗡: 𝗘𝘅𝗰𝗹𝘂𝘀𝗶𝘃𝗲 𝗣𝗿𝗲𝗺𝗶𝘂𝗺')}
-
 {self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 𝗕𝗘𝗟𝗢𝗪 📌')}
+"""
+        else:
+            keyboard = [
+                [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
+                [InlineKeyboardButton("📋 𝗠𝗬 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
+                 InlineKeyboardButton("➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 ➕", callback_data="add_group_manual")],
+                [InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
+                [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
+            ]
+            msg = f"""
+{self.bi('👑 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
+{self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗔𝗗𝗠𝗜𝗡 💎')}
+{self.bi('⭐ 𝗬𝗼𝘂𝗿 𝗔𝗰𝗰𝗲𝘀𝘀:')}
+{self.bi('• 𝗦𝘁𝗮𝗿𝘁 𝗦𝗽𝗮𝗺𝗺𝗶𝗻𝗴')}
+{self.bi('• 𝗠𝘆 𝗚𝗿𝗼𝘂𝗽𝘀')}
+{self.bi('• 𝗔𝗱𝗱 𝗚𝗿𝗼𝘂𝗽')}
+{self.bi('• 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻')}
+{self.bi('• 𝟭-𝟭𝟬𝟬 𝗥𝗮𝗻𝗴𝗲')}
+{self.bi('👑 𝗢𝘄𝗻𝗲𝗿: @' + self.owner_username)}
+{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
 """
         await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     
@@ -256,30 +296,43 @@ class PremiumGroupSpamBot:
             del user_states[user_id]
         
         auto_status = "✅ 𝗢𝗡" if auto_delete_enabled else "❌ 𝗢𝗙𝗙"
-        keyboard = [
-            [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
-            [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
-             InlineKeyboardButton("➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 ➕", callback_data="add_group_manual")],
-            [InlineKeyboardButton("🆔 𝗚𝗘𝗧 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 🆔", callback_data="get_id_info"),
-             InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
-            [InlineKeyboardButton("📊 𝗦𝗧𝗔𝗧𝗦 📊", callback_data="my_stats"),
-             InlineKeyboardButton("🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐", callback_data="owner_panel")],
-            [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟: {auto_status}", callback_data="toggle_auto_delete")],
-            [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
-        ]
-        msg = f"""
+        
+        if user_id == self.owner_id:
+            keyboard = [
+                [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
+                [InlineKeyboardButton("📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
+                 InlineKeyboardButton("➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 ➕", callback_data="add_group_manual")],
+                [InlineKeyboardButton("🆔 𝗚𝗘𝗧 𝗚𝗥𝗢𝗨𝗣 𝗜𝗗 🆔", callback_data="get_id_info"),
+                 InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
+                [InlineKeyboardButton("📊 𝗦𝗧𝗔𝗧𝗦 📊", callback_data="my_stats"),
+                 InlineKeyboardButton("🔐 𝗢𝗪𝗡𝗘𝗥 𝗣𝗔𝗡𝗘𝗟 🔐", callback_data="owner_panel")],
+                [InlineKeyboardButton(f"🔄 𝗔𝗨𝗧𝗢 𝗗𝗘𝗟: {auto_status}", callback_data="toggle_auto_delete")],
+                [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
+            ]
+            msg = f"""
 {self.bi('👑 𝗘𝗫𝗖𝗟𝗨𝗦𝗜𝗩𝗘 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
-
 {self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗕𝗔𝗖𝗞 𝗠𝗔𝗦𝗧𝗘𝗥 💎')}
-
-{self.bi('⭐ 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀 | 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲 𝗖𝗼𝘂𝗻𝘁')}
-{self.bi('⭐ 𝗗𝗲𝗹𝗲𝘁𝗲 𝗦𝘆𝘀𝘁𝗲𝗺 | 𝟬.𝟭𝘀 𝗦𝗽𝗲𝗲𝗱')}
-
+{self.bi('⭐ 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀 | 𝗥𝗘𝗔𝗟 𝗢𝗻𝗹𝗶𝗻𝗲')}
+{self.bi('⭐ 🛑 𝗦𝗧𝗢𝗣 𝗕𝘂𝘁𝘁𝗼𝗻 | 𝟭-𝟭𝟬𝟬 𝗥𝗮𝗻𝗴𝗲')}
+{self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
+"""
+        else:
+            keyboard = [
+                [InlineKeyboardButton("🔥 𝗦𝗧𝗔𝗥𝗧 𝗦𝗣𝗔𝗠𝗠𝗜𝗡𝗚 🔥", callback_data="start_spam")],
+                [InlineKeyboardButton("📋 𝗠𝗬 𝗚𝗥𝗢𝗨𝗣𝗦 📋", callback_data="saved_groups_menu"),
+                 InlineKeyboardButton("➕ 𝗔𝗗𝗗 𝗚𝗥𝗢𝗨𝗣 ➕", callback_data="add_group_manual")],
+                [InlineKeyboardButton("❓ 𝗛𝗘𝗟𝗣 ❓", callback_data="help_menu")],
+                [InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]
+            ]
+            msg = f"""
+{self.bi('👑 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗣𝗔𝗠 𝗕𝗢𝗧 👑')}
+{self.bi('💎 𝗪𝗘𝗟𝗖𝗢𝗠𝗘 𝗔𝗗𝗠𝗜𝗡 💎')}
+{self.bi('⭐ 𝗦𝗽𝗮𝗺𝗺𝗶𝗻𝗴 𝗔𝗰𝗰𝗲𝘀𝘀 𝗚𝗿𝗮𝗻𝘁𝗲𝗱')}
+{self.bi('👑 𝗢𝘄𝗻𝗲𝗿: @' + self.owner_username)}
 {self.bi('📌 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔𝗡 𝗢𝗣𝗧𝗜𝗢𝗡 📌')}
 """
         await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     
-    # ✅ getid_command WITH REAL ONLINE COUNT
     async def getid_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         info = await self.get_chat_info(context, chat_id)
@@ -292,12 +345,8 @@ class PremiumGroupSpamBot:
         
         if chat_type in ["group", "supergroup"]:
             saved_groups[str(chat_id)] = {
-                "name": chat_title,
-                "type": chat_type,
-                "id": str(chat_id),
-                "members": str(members),
-                "admins": str(admins),
-                "online": str(online)
+                "name": chat_title, "type": chat_type, "id": str(chat_id),
+                "members": str(members), "admins": str(admins), "online": str(online)
             }
             self.save_groups()
         
@@ -330,7 +379,7 @@ class PremiumGroupSpamBot:
 {self.bi('━━━━━━━━━━━━━━━━━━')}
 {self.bi('📌 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 𝗜𝗗 𝘁𝗼 𝗗𝗲𝗹𝗲𝘁𝗲')}
 {self.bi('⚠ 𝗕𝗼𝘁 𝗠𝘂𝘀𝘁 𝗕𝗲 𝗔𝗗𝗠𝗜𝗡 𝗜𝗻 𝗚𝗿𝗼𝘂𝗽')}
-{self.bi('💡 𝗖𝗮𝗻 𝗗𝗲𝗹𝗲𝘁𝗲 𝗥𝗲𝗰𝗲𝗻𝘁 𝟭𝟬𝟬 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
+{self.bi('💡 𝗖𝗮𝗻 𝗗𝗲𝗹𝗲𝘁𝗲 𝗥𝗲𝗰𝗲𝗻𝘁 𝟮𝟬𝟬 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
 """,
             reply_markup=InlineKeyboardMarkup(kb),
             parse_mode=ParseMode.MARKDOWN
@@ -347,6 +396,28 @@ class PremiumGroupSpamBot:
             return
         
         data = query.data
+        
+        # ✅ STOP SPAM BUTTON
+        if data == "stop_spam":
+            if user_id in active_spam_tasks:
+                active_spam_tasks[user_id] = False
+                await query.answer("🛑 𝗦𝗽𝗮𝗺 𝗦𝘁𝗼𝗽𝗽𝗲𝗱 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆!", show_alert=True)
+                try:
+                    await query.edit_message_text(
+                        f"{self.bi('🛑 𝗦𝗣𝗔𝗠 𝗦𝗧𝗢𝗣𝗣𝗘𝗗 🛑')}\n{self.bi('✅ 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗵𝗮𝗹𝘁𝗲𝗱 𝗯𝘆 𝘂𝘀𝗲𝗿')}",
+                        parse_mode=ParseMode.MARKDOWN
+                    )
+                except:
+                    pass
+            else:
+                await query.answer("𝗡𝗼 𝗮𝗰𝘁𝗶𝘃𝗲 𝘀𝗽𝗮𝗺 𝘁𝗼 𝘀𝘁𝗼𝗽!", show_alert=True)
+            return
+        
+        # ✅ RESTRICTED BUTTONS - ONLY OWNER
+        owner_only = ["get_id_info", "my_stats", "owner_panel", "delete_all_group", "manage_admins", "toggle_auto_delete", "clear_groups"]
+        if data in owner_only and user_id != self.owner_id:
+            await query.answer("🔐 𝗢𝗻𝗹𝘆 𝗢𝘄𝗻𝗲𝗿 𝗰𝗮𝗻 𝗮𝗰𝗰𝗲𝘀𝘀 𝘁𝗵𝗶𝘀!", show_alert=True)
+            return
         
         if data == "main_menu":
             await self.show_main_menu(query)
@@ -408,7 +479,8 @@ class PremiumGroupSpamBot:
             )
             return
         if data == "saved_groups_menu":
-            if not saved_groups:
+            user_groups = self.get_user_groups(user_id)
+            if not user_groups:
                 kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
                 await query.edit_message_text(
                     f"""
@@ -422,16 +494,17 @@ class PremiumGroupSpamBot:
                 )
                 return
             keyboard = []
-            for gid, ginfo in list(saved_groups.items())[:20]:
+            for gid, ginfo in list(user_groups.items())[:20]:
                 name = ginfo.get("name", gid)[:30]
                 keyboard.append([InlineKeyboardButton(f"📌 {name}", callback_data=f"sg_{gid}")])
-            keyboard.append([InlineKeyboardButton("🗑 𝗖𝗟𝗘𝗔𝗥 𝗔𝗟𝗟 𝗚𝗥𝗢𝗨𝗣𝗦", callback_data="clear_groups")])
+            if user_id == self.owner_id:
+                keyboard.append([InlineKeyboardButton("🗑 𝗖𝗟𝗘𝗔𝗥 𝗔𝗟𝗟 𝗚𝗥𝗢𝗨𝗣𝗦", callback_data="clear_groups")])
             keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")])
             await query.edit_message_text(
                 f"""
 {self.bi('📋 𝗦𝗔𝗩𝗘𝗗 𝗚𝗥𝗢𝗨𝗣𝗦 𝗟𝗜𝗦𝗧 📋')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗧𝗼𝘁𝗮𝗹: ' + str(len(saved_groups)) + ' 𝗚𝗿𝗼𝘂𝗽𝘀')}
+{self.bi('📌 𝗧𝗼𝘁𝗮𝗹: ' + str(len(user_groups)) + ' 𝗚𝗿𝗼𝘂𝗽𝘀')}
 
 {self.bi('👇 𝗦𝗘𝗟𝗘𝗖𝗧 𝗔 𝗚𝗥𝗢𝗨𝗣 𝗧𝗢 𝗦𝗣𝗔𝗠 👇')}
 """,
@@ -441,7 +514,8 @@ class PremiumGroupSpamBot:
             return
         if data.startswith("sg_"):
             gid = data.replace("sg_", "")
-            ginfo = saved_groups.get(gid, {})
+            user_groups = self.get_user_groups(user_id)
+            ginfo = user_groups.get(gid, {})
             gname = ginfo.get("name", gid)
             try:
                 chat_id = int(gid)
@@ -451,8 +525,7 @@ class PremiumGroupSpamBot:
             await self.show_style_menu(query, user_id)
             return
         if data == "clear_groups":
-            saved_groups.clear()
-            self.save_groups()
+            self.save_user_groups(user_id, {})
             kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗠𝗘𝗡𝗨", callback_data="main_menu")]]
             await query.edit_message_text(
                 f"""
@@ -537,6 +610,10 @@ class PremiumGroupSpamBot:
 {self.bi('𝗦𝗲𝗹𝗲𝗰𝘁 𝟭𝟬 𝗧𝗲𝘅𝘁 𝗦𝘁𝘆𝗹𝗲𝘀')}
 {self.bi('𝗢𝗿 𝗠𝗲𝗱𝗶𝗮 𝗧𝘆𝗽𝗲𝘀')}
 
+{self.bi('📌 𝗦𝗧𝗘𝗣 𝟱:')}
+{self.bi('𝗦𝗲𝗻𝗱 𝗰𝗼𝘂𝗻𝘁 (𝟭-𝟭𝟬𝟬)')}
+{self.bi('𝗖𝗹𝗶𝗰𝗸 🛑 𝗦𝗧𝗢𝗣 𝘁𝗼 𝗵𝗮𝗹𝘁')}
+
 {self.bi('🗑 /𝗱𝗲𝗹𝗲𝘁𝗲𝗮𝗹𝗹 𝗧𝗼 𝗗𝗲𝗹𝗲𝘁𝗲')}
 """,
                 reply_markup=InlineKeyboardMarkup(kb),
@@ -565,7 +642,8 @@ class PremiumGroupSpamBot:
             )
             return
         if data == "delete_all_group":
-            if not saved_groups:
+            user_groups = self.get_user_groups(user_id)
+            if not user_groups:
                 kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")]]
                 await query.edit_message_text(
                     f"{self.bi('📋 𝗡𝗼 𝗚𝗿𝗼𝘂𝗽𝘀 𝗦𝗮𝘃𝗲𝗱')}",
@@ -574,7 +652,7 @@ class PremiumGroupSpamBot:
                 )
                 return
             keyboard = []
-            for gid, ginfo in list(saved_groups.items())[:20]:
+            for gid, ginfo in list(user_groups.items())[:20]:
                 name = ginfo.get("name", gid)[:30]
                 keyboard.append([InlineKeyboardButton(f"🗑 {name}", callback_data=f"delg_{gid}")])
             keyboard.append([InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞", callback_data="owner_panel")])
@@ -582,6 +660,7 @@ class PremiumGroupSpamBot:
                 f"""
 {self.bi('🗑 𝗦𝗘𝗟𝗘𝗖𝗧 𝗚𝗥𝗢𝗨𝗣 𝗧𝗢 𝗗𝗘𝗟𝗘𝗧𝗘 🗑')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
+{self.bi('⚠ 𝗕𝗼𝘁 𝗺𝘂𝘀𝘁 𝗯𝗲 𝗔𝗗𝗠𝗜𝗡 𝘄𝗶𝘁𝗵 𝗱𝗲𝗹𝗲𝘁𝗲 𝗿𝗶𝗴𝗵𝘁𝘀')}
 {self.bi('👇 𝗖𝗹𝗶𝗰𝗸 𝗚𝗿𝗼𝘂𝗽 𝗧𝗼 𝗗𝗲𝗹𝗲𝘁𝗲 𝗠𝘀𝗴 👇')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -599,32 +678,45 @@ class PremiumGroupSpamBot:
                 f"""
 {self.bi('🗑 𝗗𝗘𝗟𝗘𝗧𝗜𝗡𝗚 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦... 🗑')}
 {self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
+{self.bi('⏳ 𝗣𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁...')}
 """,
                 parse_mode=ParseMode.MARKDOWN
             )
             deleted = 0
+            failed = 0
             try:
-                async for msg in context.bot.get_chat_history(chat_id=chat_id, limit=100):
+                async for msg in context.bot.get_chat_history(chat_id=chat_id, limit=200):
                     if msg.from_user and msg.from_user.id == context.bot.id:
                         try:
                             await context.bot.delete_message(chat_id=chat_id, message_id=msg.message_id)
                             deleted += 1
                             await asyncio.sleep(0.05)
                         except:
-                            pass
+                            failed += 1
             except:
                 pass
             kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗣𝗔𝗡𝗘𝗟", callback_data="owner_panel")]]
-            await query.edit_message_text(
-                f"""
+            if deleted > 0:
+                msg_text = f"""
 {self.bi('✅ 𝗗𝗘𝗟𝗘𝗧𝗘 𝗖𝗢𝗠𝗣𝗟𝗘𝗧𝗘𝗗 ✅')}
 {self.bi('━━━━━━━━━━━━━━')}
 {self.bi('🗑 𝗗𝗲𝗹𝗲𝘁𝗲𝗱: ' + str(deleted) + ' 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
+{self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed) + ' 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
 {self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
-""",
-                reply_markup=InlineKeyboardMarkup(kb),
-                parse_mode=ParseMode.MARKDOWN
-            )
+"""
+            else:
+                msg_text = f"""
+{self.bi('❌ 𝗡𝗢 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦 𝗗𝗘𝗟𝗘𝗧𝗘𝗗 ❌')}
+{self.bi('━━━━━━━━━━━━━━')}
+{self.bi('📌 𝗚𝗿𝗼𝘂𝗽: ' + gname)}
+{self.bi('━━━━━━━━━━━━━━')}
+{self.bi('⚠ 𝗣𝗼𝘀𝘀𝗶𝗯𝗹𝗲 𝗥𝗲𝗮𝘀𝗼𝗻𝘀:')}
+{self.bi('𝟭️ 𝗕𝗼𝘁 𝗶𝘀 𝗻𝗼𝘁 𝗔𝗗𝗠𝗜𝗡')}
+{self.bi('𝟮️ 𝗡𝗼 𝗱𝗲𝗹𝗲𝘁𝗲 𝗽𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻')}
+{self.bi('𝟯️ 𝗠𝗲𝘀𝘀𝗮𝗴𝗲𝘀 𝘁𝗼𝗼 𝗼𝗹𝗱')}
+{self.bi('𝟰️ 𝗡𝗼 𝗯𝗼𝘁 𝗺𝗲𝘀𝘀𝗮𝗴𝗲𝘀')}
+"""
+            await query.edit_message_text(msg_text, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
             return
         if data == "manage_admins":
             if user_id != self.owner_id:
@@ -709,9 +801,9 @@ class PremiumGroupSpamBot:
             kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
             await query.edit_message_text(
                 f"""
-{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬 𝗧𝗜𝗠𝗘𝗦? 🔢')}
+{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬 𝗧𝗜𝗠𝗘𝗦? (𝟭-𝟭𝟬𝟬) 🔢')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗔 𝗡𝘂𝗺𝗯𝗲𝗿 (𝟭-𝟭𝟬𝟬𝟬)')}
+{self.bi('📌 𝗦𝗲𝗻𝗱 𝗔 𝗡𝘂𝗺𝗯𝗲𝗿 𝗳𝗿𝗼𝗺 𝟭 𝘁𝗼 𝟭𝟬𝟬')}
 {self.bi('💡 𝗥𝗲𝗰𝗼𝗺𝗺𝗲𝗻𝗱𝗲𝗱: 𝟭𝟬 𝗙𝗼𝗿 𝗧𝗲𝘀𝘁')}
 """,
                 reply_markup=InlineKeyboardMarkup(kb),
@@ -778,11 +870,9 @@ class PremiumGroupSpamBot:
         user_id = update.effective_user.id
         chat_type = update.effective_chat.type
         
-        # ✅ GROUP/SUPERGROUP MEIN KISI KO REPLY MAT KARO - SIRF DM MEIN KAAM KARO
         if chat_type in ["group", "supergroup"]:
             return
         
-        # ✅ PRIVATE CHAT MEIN UNAUTHORIZED USERS KO BLOCK KARO
         if not self.is_authorized(user_id):
             kb = [[InlineKeyboardButton("🥡 𝗖𝗼𝗻𝘁𝗮𝗰𝘁 - 𝗙𝗮𝗧𝗵𝗘𝗿 🩵", url=f"https://t.me/{self.owner_username}")]]
             await update.message.reply_text(self.block_msg(), reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
@@ -840,13 +930,14 @@ class PremiumGroupSpamBot:
             if chat_id:
                 info = await self.get_chat_info(context, chat_id)
                 gname = info["title"]
-                saved_groups[str(chat_id)] = {
+                user_groups = self.get_user_groups(user_id)
+                user_groups[str(chat_id)] = {
                     "name": gname, "id": str(chat_id),
                     "members": str(info["members"]),
                     "admins": str(info["admins"]),
                     "online": str(info["online"])
                 }
-                self.save_groups()
+                self.save_user_groups(user_id, user_groups)
                 user_states[user_id].update({"chat_id": chat_id, "group_name": gname, "step": "waiting_for_type"})
                 
                 keyboard = [
@@ -911,8 +1002,8 @@ class PremiumGroupSpamBot:
                 f"""
 {self.bi('✅ 𝗖𝗢𝗡𝗧𝗘𝗡𝗧 𝗥𝗘𝗖𝗘𝗜𝗩𝗘𝗗 ✅')}
 {self.bi('━━━━━━━━━━━━━━━━━━')}
-{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬 𝗧𝗜𝗠𝗘𝗦? 🔢')}
-{self.bi('📌 𝗦𝗲𝗻𝗱 𝗔 𝗡𝘂𝗺𝗯𝗲𝗿 (𝟭-𝟭𝟬𝟬𝟬)')}
+{self.bi('🔢 𝗛𝗢𝗪 𝗠𝗔𝗡𝗬 𝗧𝗜𝗠𝗘𝗦? (𝟭-𝟭𝟬𝟬) 🔢')}
+{self.bi('📌 𝗦𝗲𝗻𝗱 𝗔 𝗡𝘂𝗺𝗯𝗲𝗿 𝗳𝗿𝗼𝗺 𝟭 𝘁𝗼 𝟭𝟬𝟬')}
 """,
                 reply_markup=InlineKeyboardMarkup(kb),
                 parse_mode=ParseMode.MARKDOWN
@@ -922,7 +1013,7 @@ class PremiumGroupSpamBot:
         if step == "waiting_for_count":
             try:
                 count = int(update.message.text)
-                count = max(1, min(count, 1000))
+                count = max(1, min(count, 100))
                 user_states[user_id]["count"] = count
                 user_states[user_id]["step"] = "waiting_for_speed"
                 keyboard = [
@@ -947,7 +1038,7 @@ class PremiumGroupSpamBot:
             except ValueError:
                 kb = [[InlineKeyboardButton("🔙 𝗕𝗔𝗖𝗞 𝗧𝗢 𝗦𝗧𝗬𝗟𝗘𝗦", callback_data="show_styles")]]
                 await update.message.reply_text(
-                    f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗡𝗨𝗠𝗕𝗘𝗥 ❌')}\n{self.bi('𝗦𝗲𝗻𝗱 𝟭 𝘁𝗼 𝟭𝟬𝟬𝟬')}",
+                    f"{self.bi('❌ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗡𝗨𝗠𝗕𝗘𝗥 ❌')}\n{self.bi('𝗦𝗲𝗻𝗱 𝟭 𝘁𝗼 𝟭𝟬𝟬')}",
                     reply_markup=InlineKeyboardMarkup(kb),
                     parse_mode=ParseMode.MARKDOWN
                 )
@@ -978,11 +1069,15 @@ class PremiumGroupSpamBot:
         msg_type = data.get("msg_type", "text")
         content = data.get("content")
         
+        # ✅ Set active spam task
+        active_spam_tasks[user_id] = True
+        
         try:
             await query.delete_message()
         except:
             pass
         
+        # ✅ Status message with STOP button
         status_msg = await context.bot.send_message(
             chat_id=query.message.chat_id,
             text=f"""
@@ -995,6 +1090,7 @@ class PremiumGroupSpamBot:
 {self.bi('━━━━━━━━━━━━━━━━━━')}
 {self.bi('🚀 𝗦𝗘𝗡𝗗𝗜𝗡𝗚 𝗠𝗘𝗦𝗦𝗔𝗚𝗘𝗦 𝗡𝗢𝗪... 🚀')}
 """,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 𝗦𝗧𝗢𝗣 𝗦𝗣𝗔𝗠 🛑", callback_data="stop_spam")]]),
             parse_mode=ParseMode.MARKDOWN
         )
         
@@ -1009,6 +1105,22 @@ class PremiumGroupSpamBot:
             style_func = self.get_style_function(msg_type)
         
         for i in range(count):
+            # ✅ Check if STOP was pressed
+            if not active_spam_tasks.get(user_id, False):
+                try:
+                    await status_msg.edit_text(
+                        f"""
+{self.bi('🛑 𝗦𝗣𝗔𝗠 𝗦𝗧𝗢𝗣𝗣𝗘𝗗 🛑')}
+{self.bi('━━━━━━━━━━━━━━')}
+{self.bi('✅ 𝗦𝗲𝗻𝘁 𝗕𝗲𝗳𝗼𝗿𝗲 𝗦𝘁𝗼𝗽: ' + str(success))}
+{self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed))}
+""",
+                        parse_mode=ParseMode.MARKDOWN
+                    )
+                except:
+                    pass
+                break
+            
             try:
                 sent_msg = None
                 
@@ -1076,7 +1188,8 @@ class PremiumGroupSpamBot:
                     sent_message_ids.append(sent_msg.message_id)
                     success += 1
                 
-                if success % 10 == 0:
+                # ✅ Update progress every 5 messages
+                if success % 5 == 0:
                     try:
                         await status_msg.edit_text(
                             f"""
@@ -1086,6 +1199,7 @@ class PremiumGroupSpamBot:
 {self.bi('✅ 𝗦𝗲𝗻𝘁: ' + str(success) + '/' + str(count))}
 {self.bi('❌ 𝗙𝗮𝗶𝗹𝗲𝗱: ' + str(failed))}
 """,
+                            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🛑 𝗦𝗧𝗢𝗣 𝗦𝗣𝗔𝗠 🛑", callback_data="stop_spam")]]),
                             parse_mode=ParseMode.MARKDOWN
                         )
                     except:
@@ -1110,6 +1224,10 @@ class PremiumGroupSpamBot:
                     break
                 if failed > 3:
                     break
+        
+        # ✅ Clean up active task
+        if user_id in active_spam_tasks:
+            del active_spam_tasks[user_id]
         
         if success > 0:
             last_spam_messages[user_id] = {
@@ -1196,7 +1314,10 @@ def main():
 ║   𝟭𝟬 𝗧𝗘𝗫𝗧 𝗦𝗧𝗬𝗟𝗘𝗦 𝗔𝗖𝗧𝗜𝗩𝗘            ║
 ║   🟢 𝗥𝗘𝗔𝗟 𝗢𝗡𝗟𝗜𝗡𝗘 𝗖𝗢𝗨𝗡𝗧            ║
 ║   𝟬.𝟭𝘀 𝗨𝗟𝗧𝗥𝗔 𝗦𝗣𝗘𝗘𝗗 𝗔𝗖𝗧𝗜𝗩𝗘          ║
+║   🛑 𝗦𝗧𝗢𝗣 𝗕𝗨𝗧𝗧𝗢𝗡 𝗔𝗖𝗧𝗜𝗩𝗘           ║
+║   𝟭-𝟭𝟬𝟬 𝗖𝗨𝗦𝗧𝗢𝗠 𝗥𝗔𝗡𝗚𝗘             ║
 ║   🗑 𝗗𝗘𝗟𝗘𝗧𝗘 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗖𝗧𝗜𝗩𝗘        ║
+║   👥 𝗔𝗗𝗠𝗜𝗡 𝗦𝗘𝗣𝗔𝗥𝗔𝗧𝗘 𝗗𝗔𝗧𝗔         ║
 ║                                      ║
 ║   👤 𝗢𝘄𝗻𝗲𝗿: @{OWNER_USERNAME}     ║
 ║   🆔 /𝗚𝗲𝘁𝗜𝗱 | 🗑 /𝗱𝗲𝗹𝗲𝘁𝗲𝗮𝗹𝗹       ║
