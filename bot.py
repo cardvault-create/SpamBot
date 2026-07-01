@@ -37,7 +37,6 @@ class PremiumGroupSpamBot:
 """
     
     async def get_chat_info(self, context, chat_id):
-        """Get chat info and return title"""
         try:
             chat = await context.bot.get_chat(chat_id)
             return chat.title if chat.title else str(chat_id)
@@ -56,9 +55,10 @@ class PremiumGroupSpamBot:
         
         keyboard = [
             [InlineKeyboardButton("START SPAMMING", callback_data="start_spam")],
-            [InlineKeyboardButton("STATS", callback_data="my_stats"),
+            [InlineKeyboardButton("GET GROUP ID", callback_data="get_id_info"),
              InlineKeyboardButton("HELP", callback_data="help_menu")],
-            [InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
+            [InlineKeyboardButton("STATS", callback_data="my_stats"),
+             InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
             [InlineKeyboardButton("OWNER CHANNEL", url=f"https://t.me/{self.owner_username}")]
         ]
         
@@ -69,12 +69,45 @@ class PremiumGroupSpamBot:
 {self.bi('PREMIUM FEATURES')}
 {self.bi('All Media Types Working')}
 {self.bi('Group Name Detection')}
+{self.bi('Built-in ID System')}
 {self.bi('No Admin Rights Needed')}
 {self.bi('Custom Speed Control')}
 
 {self.bi('SELECT AN OPTION')}
 """
         await update.message.reply_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+    
+    async def id_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /id command in groups"""
+        chat_id = update.effective_chat.id
+        chat_title = update.effective_chat.title if update.effective_chat.title else "Private Chat"
+        user_id = update.effective_user.id
+        
+        if update.effective_chat.type in ["group", "supergroup"]:
+            msg = f"""
+{self.bi('GROUP INFORMATION')}
+{self.bi('--------------------')}
+{self.bi('Name: ' + chat_title)}
+{self.bi('ID: ' + str(chat_id))}
+{self.bi('--------------------')}
+{self.bi('Copy this ID for spam')}
+"""
+            if update.message.reply_to_message:
+                replied_user = update.message.reply_to_message.from_user
+                msg += f"""
+{self.bi('REPLIED USER')}
+{self.bi('Name: ' + (replied_user.first_name or ''))}
+{self.bi('ID: ' + str(replied_user.id))}
+"""
+        else:
+            msg = f"""
+{self.bi('CHAT INFORMATION')}
+{self.bi('--------------------')}
+{self.bi('Name: ' + chat_title)}
+{self.bi('ID: ' + str(chat_id))}
+"""
+        
+        await update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
     
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
@@ -92,22 +125,47 @@ class PremiumGroupSpamBot:
                 del user_states[user_id]
             keyboard = [
                 [InlineKeyboardButton("START SPAMMING", callback_data="start_spam")],
-                [InlineKeyboardButton("STATS", callback_data="my_stats"),
+                [InlineKeyboardButton("GET GROUP ID", callback_data="get_id_info"),
                  InlineKeyboardButton("HELP", callback_data="help_menu")],
-                [InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
+                [InlineKeyboardButton("STATS", callback_data="my_stats"),
+                 InlineKeyboardButton("OWNER PANEL", callback_data="owner_panel")],
                 [InlineKeyboardButton("OWNER CHANNEL", url=f"https://t.me/{self.owner_username}")]
             ]
             msg = f"""
 {self.bi('EXCLUSIVE PREMIUM SPAM BOT')}
 {self.bi('WELCOME BACK MASTER')}
 
-{self.bi('PREMIUM FEATURES')}
-{self.bi('All Media Types Working')}
-{self.bi('Group Name Detection')}
-
 {self.bi('SELECT AN OPTION')}
 """
             await query.edit_message_text(msg, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            return
+        
+        if data == "get_id_info":
+            keyboard = [[InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]]
+            await query.edit_message_text(
+                f"""
+{self.bi('HOW TO GET GROUP ID')}
+{self.bi('--------------------')}
+
+{self.bi('METHOD 1 - Using This Bot:')}
+{self.bi('1. Add this bot to group as ADMIN')}
+{self.bi('2. Send /id in the group')}
+{self.bi('3. Bot will show Group ID')}
+
+{self.bi('METHOD 2 - Using @getidsbot:')}
+{self.bi('1. Add @getidsbot to group')}
+{self.bi('2. Send /id in group')}
+{self.bi('3. Copy the ID')}
+
+{self.bi('METHOD 3 - Forward Message:')}
+{self.bi('1. Forward any group message to @getidsbot')}
+{self.bi('2. It will show the Group ID')}
+
+{self.bi('The ID looks like: -1001234567890')}
+""",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
             return
         
         if data == "start_spam":
@@ -118,10 +176,11 @@ class PremiumGroupSpamBot:
 {self.bi('SEND GROUP ID OR USERNAME')}
 
 {self.bi('Get Group ID:')}
-{self.bi('Add @getidsbot to group')}
+{self.bi('Add bot to group as ADMIN')}
 {self.bi('Send /id in group')}
-{self.bi('Copy ID: -1001234567890')}
+{self.bi('Copy the ID number')}
 
+{self.bi('Format: -1001234567890')}
 {self.bi('Or send @username')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -139,6 +198,7 @@ class PremiumGroupSpamBot:
 {self.bi('Plan: Exclusive Owner')}
 {self.bi('Limits: Unlimited')}
 {self.bi('All Media: Working')}
+{self.bi('ID System: Active')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
@@ -151,13 +211,30 @@ class PremiumGroupSpamBot:
                 f"""
 {self.bi('HOW TO USE')}
 {self.bi('--------------------')}
-{self.bi('1. Add bot to group')}
-{self.bi('2. Get Group ID from @getidsbot')}
-{self.bi('3. Send Group ID to bot')}
-{self.bi('4. Select content type')}
-{self.bi('5. Send content (text/sticker/photo)')}
-{self.bi('6. Set count and speed')}
-{self.bi('7. Messages will be sent')}
+
+{self.bi('STEP 1:')}
+{self.bi('Add bot to group as ADMIN')}
+{self.bi('Give ALL permissions to bot')}
+
+{self.bi('STEP 2:')}
+{self.bi('Send /id in group to get ID')}
+
+{self.bi('STEP 3:')}
+{self.bi('Click START SPAMMING')}
+
+{self.bi('STEP 4:')}
+{self.bi('Send Group ID to bot')}
+
+{self.bi('STEP 5:')}
+{self.bi('Select content type')}
+
+{self.bi('STEP 6:')}
+{self.bi('Send content and set count')}
+
+{self.bi('IMPORTANT:')}
+{self.bi('Bot must have SEND permissions')}
+{self.bi('For stickers: Send Stickers ON')}
+{self.bi('For photos: Send Photos ON')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
@@ -174,6 +251,7 @@ class PremiumGroupSpamBot:
 {self.bi('Username: @' + self.owner_username)}
 {self.bi('Access: Exclusive')}
 {self.bi('All Features Working')}
+{self.bi('ID System: Built-in')}
 """,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
@@ -282,10 +360,7 @@ class PremiumGroupSpamBot:
                     [InlineKeyboardButton("BACK TO MAIN MENU", callback_data="main_menu")]
                 ]
                 await query.edit_message_text(
-                    f"""
-{self.bi('SELECT CONTENT TYPE')}
-{self.bi('Target: ' + str(chat_id))}
-""",
+                    f"{self.bi('SELECT CONTENT TYPE')}",
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
                 )
@@ -337,7 +412,6 @@ class PremiumGroupSpamBot:
             chat_id = self.parse_chat_id(text)
             
             if chat_id:
-                # Try to get group name
                 try:
                     group_name = await self.get_chat_info(context, chat_id)
                 except:
@@ -377,9 +451,8 @@ class PremiumGroupSpamBot:
                 await update.message.reply_text(
                     f"""
 {self.bi('INVALID GROUP ID')}
-{self.bi('Use @getidsbot to get ID')}
+{self.bi('Send /id in group to get ID')}
 {self.bi('Format: -1001234567890')}
-{self.bi('Or send @username')}
 """,
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
@@ -387,7 +460,6 @@ class PremiumGroupSpamBot:
             return
         
         if step == "waiting_for_content":
-            # Store the message
             user_states[user_id]["content"] = update.message
             user_states[user_id]["step"] = "waiting_for_count"
             
@@ -431,7 +503,7 @@ class PremiumGroupSpamBot:
             except ValueError:
                 keyboard = [[InlineKeyboardButton("BACK TO TYPE SELECTION", callback_data="show_types")]]
                 await update.message.reply_text(
-                    f"{self.bi('INVALID NUMBER')}\n{self.bi('Send a number from 1 to 1000')}",
+                    f"{self.bi('INVALID NUMBER')}",
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
                 )
@@ -472,11 +544,9 @@ class PremiumGroupSpamBot:
 {self.bi('SPAM ATTACK STARTED')}
 {self.bi('--------------------')}
 {self.bi('Group: ' + group_name)}
-{self.bi('ID: ' + str(chat_id))}
 {self.bi('Type: ' + msg_type)}
 {self.bi('Count: ' + str(count))}
 {self.bi('Speed: ' + str(delay) + 's')}
-{self.bi('--------------------')}
 {self.bi('SENDING NOW')}
 """,
             parse_mode=ParseMode.MARKDOWN
@@ -484,7 +554,7 @@ class PremiumGroupSpamBot:
         
         success = 0
         failed = 0
-        first_error = None
+        error_msg = None
         
         for i in range(count):
             try:
@@ -499,8 +569,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
-                        if not first_error:
-                            first_error = "No sticker found in message"
+                        error_msg = "No sticker found. Send a valid sticker."
+                        break
                 
                 elif msg_type == "photo":
                     if content and content.photo:
@@ -512,6 +582,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        error_msg = "No photo found"
+                        break
                 
                 elif msg_type == "video":
                     if content and content.video:
@@ -523,6 +595,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        error_msg = "No video found"
+                        break
                 
                 elif msg_type == "document":
                     if content and content.document:
@@ -534,6 +608,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        error_msg = "No document found"
+                        break
                 
                 elif msg_type == "audio":
                     if content and content.audio:
@@ -545,6 +621,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        error_msg = "No audio found"
+                        break
                 
                 elif msg_type == "voice":
                     if content and content.voice:
@@ -556,6 +634,8 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        error_msg = "No voice message found"
+                        break
                 
                 elif msg_type == "video_note":
                     if content and content.video_note:
@@ -566,9 +646,13 @@ class PremiumGroupSpamBot:
                         success += 1
                     else:
                         failed += 1
+                        error_msg = "No video note found"
+                        break
                 
                 else:
                     failed += 1
+                    error_msg = "Unknown content type"
+                    break
                 
                 if success > 0 and success % 5 == 0:
                     try:
@@ -577,7 +661,6 @@ class PremiumGroupSpamBot:
 {self.bi('SPAMMING IN PROGRESS')}
 {self.bi('Group: ' + group_name)}
 {self.bi('Sent: ' + str(success) + '/' + str(count))}
-{self.bi('Failed: ' + str(failed))}
 """,
                             parse_mode=ParseMode.MARKDOWN
                         )
@@ -589,72 +672,52 @@ class PremiumGroupSpamBot:
             except Exception as e:
                 failed += 1
                 error_str = str(e).lower()
-                logger.error(f"Error sending message {i+1}: {e}")
+                logger.error(f"Error: {e}")
                 
-                if not first_error:
-                    first_error = str(e)[:200]
-                
-                if "forbidden" in error_str or "blocked" in error_str:
-                    try:
-                        await query.edit_message_text(
-                            f"""
-{self.bi('CANNOT SEND MESSAGES')}
-{self.bi('Group: ' + group_name)}
-{self.bi('Sent: ' + str(success))}
-{self.bi('Reason: Bot is not in group')}
-{self.bi('Add bot to group first')}
-""",
-                            parse_mode=ParseMode.MARKDOWN
-                        )
-                    except:
-                        pass
+                if "not enough rights" in error_str:
+                    error_msg = f"Bot needs ADMIN rights with {msg_type} permission ON"
                     break
-                
-                if "not found" in error_str or "chat not found" in error_str:
-                    try:
-                        await query.edit_message_text(
-                            f"""
-{self.bi('GROUP NOT FOUND')}
-{self.bi('ID: ' + str(chat_id))}
-{self.bi('Check ID is correct')}
-{self.bi('Bot must be in group')}
-""",
-                            parse_mode=ParseMode.MARKDOWN
-                        )
-                    except:
-                        pass
+                elif "forbidden" in error_str or "blocked" in error_str:
+                    error_msg = "Bot is not in group or blocked"
                     break
-                
-                if "sticker" in error_str or "failed to get" in error_str:
+                elif "not found" in error_str:
+                    error_msg = "Group not found. Check ID"
                     break
+                elif "sticker" in error_str:
+                    error_msg = "Cannot send sticker. Give bot sticker permission"
+                    break
+                else:
+                    error_msg = str(e)[:200]
                 
-                if failed > 3:
+                if failed > 2:
                     break
         
-        # Save for resend
         user_states[user_id]["last_success"] = success
         user_states[user_id]["last_failed"] = failed
-        user_states[user_id]["last_count"] = count
-        user_states[user_id]["last_delay"] = delay
         
-        # Result message
-        result_text = f"""
+        result = f"""
 {self.bi('MISSION COMPLETED')}
 {self.bi('--------------------')}
 {self.bi('Group: ' + group_name)}
-{self.bi('ID: ' + str(chat_id))}
 {self.bi('Success: ' + str(success))}
 {self.bi('Failed: ' + str(failed))}
 {self.bi('Type: ' + msg_type)}
 {self.bi('Speed: ' + str(delay) + 's')}
 """
-        if first_error and success == 0:
-            result_text += f"""
+        
+        if error_msg and success == 0:
+            result += f"""
 {self.bi('--------------------')}
-{self.bi('Error: ' + first_error[:150])}
+{self.bi('ERROR: ' + error_msg)}
+{self.bi('--------------------')}
+
+{self.bi('SOLUTION:')}
+{self.bi('1. Make bot ADMIN in group')}
+{self.bi('2. Enable ALL permissions')}
+{self.bi('3. Try again')}
 """
         
-        result_text += f"""
+        result += f"""
 {self.bi('--------------------')}
 
 {self.bi('WHAT DO YOU WANT TO DO')}
@@ -670,7 +733,7 @@ class PremiumGroupSpamBot:
         
         try:
             await query.message.reply_text(
-                result_text,
+                result,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
             )
@@ -686,6 +749,7 @@ def main():
     bot = PremiumGroupSpamBot()
     
     app.add_handler(CommandHandler("start", bot.start))
+    app.add_handler(CommandHandler("id", bot.id_command))
     app.add_handler(CallbackQueryHandler(bot.handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.message_handler))
     app.add_handler(MessageHandler(
@@ -696,7 +760,7 @@ def main():
     
     print(f"PREMIUM GROUP SPAM BOT STARTED")
     print(f"Owner: @{OWNER_USERNAME}")
-    print("ALL MEDIA TYPES WORKING")
+    print("Features: /id command, ALL media types")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
